@@ -1,5 +1,6 @@
 import os from 'node:os';
 import * as vscode from 'vscode';
+import { runAddAccount } from './addAccount';
 import { App } from './app';
 import { configDirOverride, createApplier, type ConfigAccess } from './applier';
 import { BindingStore } from './bindingStore';
@@ -36,6 +37,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   ctx.subscriptions.push(
     item,
     vscode.commands.registerCommand('claudeAccounts.switch', (options?: { title?: string }) => runSwitch(app, options)),
+    vscode.commands.registerCommand('claudeAccounts.add', () => runAddAccount(app)),
     // Email có thể đổi khi người dùng đăng nhập ở nơi khác; vẽ lại mỗi khi cửa sổ được focus.
     vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.render(); }),
   );
