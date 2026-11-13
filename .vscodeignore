@@ -10,3 +10,5 @@ tsconfig.json
 esbuild.mjs
 vitest.config.ts
 **/*.map
+.gitignore
+package-lock.json
