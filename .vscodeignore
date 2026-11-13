@@ -1,0 +1,12 @@
+src/**
+test/**
+docs/**
+spike/**
+node_modules/**
+.superpowers/**
+*.md
+!README.md
+tsconfig.json
+esbuild.mjs
+vitest.config.ts
+**/*.map
