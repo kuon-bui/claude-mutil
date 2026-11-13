@@ -1,0 +1,6 @@
+node_modules/
+dist/
+*.vsix
+.superpowers/
+spike/probe-log.txt
+spike/wrapper-log.txt
