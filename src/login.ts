@@ -31,7 +31,7 @@ export async function runLogin(profile: Profile, deps: LoginDeps): Promise<Login
   const cli = await deps.findCli();
   if (!cli) return 'no-cli';
   const baseline = await deps.readEmail();
-  const env = { CLAUDE_CONFIG_DIR: profile.isDefault ? null : profile.configDir };
+  const env = { CLAUDE_CONFIG_DIR: profile.isDefault ? profile.envDir ?? null : profile.configDir };
   const terminal = deps.openTerminal(`Claude: đăng nhập ${profile.name}`, env, cli, [...LOGIN_ARGS]);
   for (let i = 0; i < TIMEOUT_MS / POLL_MS; i++) {
     await deps.sleep(POLL_MS);

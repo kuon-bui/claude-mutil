@@ -8,7 +8,9 @@ import type { Profile } from './profileStore';
  * Hồ sơ Mặc định (không đặt `CLAUDE_CONFIG_DIR`) dùng `<home>/.claude.json`; hồ sơ khác dùng `<configDir>/.claude.json`.
  */
 export async function readAccountEmail(profile: Profile, home: string): Promise<string | undefined> {
-  const file = path.join(profile.isDefault ? home : profile.configDir, '.claude.json');
+  // Như Claude Code: `.claude.json` nằm trong CLAUDE_CONFIG_DIR nếu biến được đặt, không thì trong home.
+  const dir = profile.isDefault ? profile.envDir ?? home : profile.configDir;
+  const file = path.join(dir, '.claude.json');
   try {
     const data = JSON.parse(await fs.readFile(file, 'utf8')) as { oauthAccount?: { emailAddress?: unknown } };
     const email = data?.oauthAccount?.emailAddress;

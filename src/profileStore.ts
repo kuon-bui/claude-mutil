@@ -8,7 +8,14 @@ export const DEFAULT_PROFILE_ID = 'default';
 const DEFAULT_PROFILE_NAME = 'Mặc định';
 const STORAGE_KEY = 'claudeAccounts.profiles';
 
-export interface Profile { id: string; name: string; color: string; configDir: string; isDefault: boolean }
+export interface Profile {
+  id: string; name: string; color: string; configDir: string; isDefault: boolean;
+  /**
+   * Chỉ hồ sơ Mặc định: giá trị `CLAUDE_CONFIG_DIR` người dùng đã đặt sẵn ngoài VS Code (nếu có).
+   * Áp dụng Mặc định thì đặt lại đúng giá trị này thay vì xoá biến.
+   */
+  envDir?: string;
+}
 
 export class DuplicateNameError extends Error {
   constructor(name: string) { super(`Đã có hồ sơ tên "${name}".`); this.name = 'DuplicateNameError'; }
@@ -24,13 +31,15 @@ const nameKey = (name: string) => name.trim().normalize('NFC').toLocaleLowerCase
 
 /** Danh sách hồ sơ, lưu trong `globalState`. Hồ sơ "Mặc định" (`~/.claude`) luôn có và luôn đứng đầu. */
 export class ProfileStore {
-  constructor(private readonly store: KeyValueStore, private readonly home: string) {}
+  /** `defaultDir`: `CLAUDE_CONFIG_DIR` có sẵn trong môi trường lúc extension kích hoạt (đặt ngoài VS Code), nếu có. */
+  constructor(private readonly store: KeyValueStore, private readonly home: string, private readonly defaultDir?: string) {}
 
   list(): Profile[] {
     const state = this.read();
     return [
       { id: DEFAULT_PROFILE_ID, name: state.defaultName ?? DEFAULT_PROFILE_NAME, color: PROFILE_COLORS[0],
-        configDir: defaultConfigDir(this.home), isDefault: true },
+        configDir: this.defaultDir ?? defaultConfigDir(this.home), isDefault: true,
+        ...(this.defaultDir !== undefined && { envDir: this.defaultDir }) },
       ...state.profiles.map((p) => ({ ...p, configDir: profileDir(this.home, p.id), isDefault: false })),
     ];
   }

@@ -23,8 +23,9 @@ export function createApplier(deps: ApplierDeps): ProfileApplier {
   return {
     perWindow: true,
     apply(profile: Profile): Promise<void> {
-      if (profile.isDefault) delete deps.env[VAR];
-      else deps.env[VAR] = profile.configDir;
+      const value = profile.isDefault ? profile.envDir : profile.configDir;
+      if (value === undefined) delete deps.env[VAR];
+      else deps.env[VAR] = value;
       return Promise.resolve();
     },
   };

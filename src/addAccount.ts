@@ -5,8 +5,7 @@ import * as vscode from 'vscode';
 import { readAccountEmail } from './accountInfo';
 import type { App } from './app';
 import { resolveCli, runLogin, type LoginDeps, type LoginResult } from './login';
-import { defaultConfigDir } from './paths';
-import type { Profile } from './profileStore';
+import { DEFAULT_PROFILE_ID, type Profile } from './profileStore';
 import { linkShared, SHARED_DIRS } from './sharedLinks';
 
 function claudeOnPath(): Promise<boolean> {
@@ -97,7 +96,7 @@ export async function runAddAccount(app: App): Promise<void> {
   // 2. Tạo hồ sơ, thư mục và phần dùng chung.
   const profile = await app.profiles.add(name);
   await fs.promises.mkdir(profile.configDir, { recursive: true });
-  const report = await linkShared(defaultConfigDir(app.home), profile.configDir, process.platform);
+  const report = await linkShared(app.profiles.get(DEFAULT_PROFILE_ID)!.configDir, profile.configDir, process.platform);
   const notShared = report.skipped.filter((n) => (SHARED_DIRS as readonly string[]).includes(n));
   if (notShared.length > 0) {
     void vscode.window.showWarningMessage(`Không dùng chung được: ${notShared.join(', ')} (đã có sẵn trong ${profile.configDir}).`);

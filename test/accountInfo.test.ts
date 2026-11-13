@@ -32,6 +32,12 @@ test('hồ sơ Mặc định: đọc <home>/.claude.json, không đọc trong co
   expect(await readAccountEmail({ ...p, configDir: dir, isDefault: true }, home)).toBe('me@x.com');
 });
 
+test('hồ sơ Mặc định có envDir (CLAUDE_CONFIG_DIR ngoài VS Code): đọc <envDir>/.claude.json như Claude Code', async () => {
+  await fs.writeFile(path.join(home, '.claude.json'), claudeJson('wrong@x.com'));
+  await fs.writeFile(path.join(dir, '.claude.json'), claudeJson('custom@x.com'));
+  expect(await readAccountEmail({ ...p, configDir: dir, isDefault: true, envDir: dir }, home)).toBe('custom@x.com');
+});
+
 test('thiếu file, JSON hỏng hoặc chưa đăng nhập đều trả về undefined', async () => {
   expect(await readAccountEmail({ ...p, configDir: dir, isDefault: false }, home)).toBeUndefined();
   await fs.writeFile(path.join(dir, '.claude.json'), '{hỏng');

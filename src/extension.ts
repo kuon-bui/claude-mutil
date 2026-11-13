@@ -20,9 +20,11 @@ function claudeCodeConfig(): ConfigAccess {
 }
 
 export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
-  // 1. Kho hồ sơ và cặp thư mục–hồ sơ.
+  // 1. Kho hồ sơ và cặp thư mục–hồ sơ. CLAUDE_CONFIG_DIR có sẵn lúc này đến từ ngoài VS Code (mỗi lần tải lại cửa sổ,
+  //    extension host nhận lại môi trường gốc): coi đó là thư mục của hồ sơ Mặc định thay vì xoá nó.
   const home = os.homedir();
-  const profiles = new ProfileStore(ctx.globalState, home);
+  const externalConfigDir = process.env.CLAUDE_CONFIG_DIR?.trim() || undefined;
+  const profiles = new ProfileStore(ctx.globalState, home, externalConfigDir);
   const bindings = new BindingStore(ctx.globalState, process.platform);
   const config = claudeCodeConfig();
   const applier = createApplier({ env: process.env, config, extensionPath: ctx.extensionPath, platform: process.platform });

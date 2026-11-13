@@ -44,6 +44,12 @@ test('hồ sơ Mặc định: gỡ CLAUDE_CONFIG_DIR khỏi môi trường termi
   expect(calls.opened[0][1]).toEqual({ CLAUDE_CONFIG_DIR: null });
 });
 
+test('hồ sơ Mặc định có envDir: terminal dùng đúng CLAUDE_CONFIG_DIR đó', async () => {
+  const { deps, calls } = fakeDeps({ cli: CLI, emails: [undefined, 'me@x.com'] });
+  await runLogin({ ...defaultProfile, configDir: 'D:\\claude', envDir: 'D:\\claude' }, deps);
+  expect(calls.opened[0][1]).toEqual({ CLAUDE_CONFIG_DIR: 'D:\\claude' });
+});
+
 test('thấy email thì trả signed-in và đóng terminal', async () => {
   const { deps, calls } = fakeDeps({ cli: CLI, emails: [undefined, undefined, undefined, 'a@x.com'] });
   expect(await runLogin(profile, deps)).toBe('signed-in');

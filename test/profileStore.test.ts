@@ -10,6 +10,17 @@ test('kho rỗng vẫn có hồ sơ Mặc định trỏ vào ~/.claude', () => {
     configDir: path.join('/home/a', '.claude'), isDefault: true }]);
 });
 
+test('CLAUDE_CONFIG_DIR có sẵn ngoài VS Code: hồ sơ Mặc định dùng thư mục đó và giữ giá trị để đặt lại', () => {
+  const s = new ProfileStore(memoryStore(), '/home/a', '/data/claude');
+  const def = s.get('default')!;
+  expect(def.configDir).toBe('/data/claude');
+  expect(def.envDir).toBe('/data/claude');
+});
+
+test('không có CLAUDE_CONFIG_DIR ngoài VS Code: hồ sơ Mặc định không mang envDir', () => {
+  expect(new ProfileStore(memoryStore(), '/home/a').get('default')!.envDir).toBeUndefined();
+});
+
 test('add tạo id 8 ký tự hex, configDir trong .claude-profiles, màu xoay vòng', async () => {
   const s = new ProfileStore(memoryStore(), '/home/a');
   const p = await s.add('Công ty A');

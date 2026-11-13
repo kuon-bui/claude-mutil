@@ -24,6 +24,12 @@ test('hồ sơ Mặc định xoá CLAUDE_CONFIG_DIR', async () => {
   expect('CLAUDE_CONFIG_DIR' in env).toBe(false);
 });
 
+test('hồ sơ Mặc định có envDir (CLAUDE_CONFIG_DIR có sẵn ngoài VS Code) thì đặt lại đúng giá trị đó, không xoá', async () => {
+  const env: NodeJS.ProcessEnv = { CLAUDE_CONFIG_DIR: '/p/x1' };
+  await createApplier(deps(env)).apply({ ...defaultProfile, configDir: '/data/claude', envDir: '/data/claude' });
+  expect(env.CLAUDE_CONFIG_DIR).toBe('/data/claude');
+});
+
 test('biến môi trường được đặt ngay khi gọi apply, trước khi chờ promise', () => {
   const env: NodeJS.ProcessEnv = {};
   void createApplier(deps(env)).apply(profile('/p/x1'));
