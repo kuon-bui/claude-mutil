@@ -19,7 +19,13 @@
   "activationEvents": [
     "*"
   ],
-  "contributes": {},
+  "contributes": {
+    "commands": [
+      { "command": "claudeAccounts.switch", "category": "Claude Accounts", "title": "Đổi tài khoản" },
+      { "command": "claudeAccounts.add", "category": "Claude Accounts", "title": "Thêm tài khoản" },
+      { "command": "claudeAccounts.manage", "category": "Claude Accounts", "title": "Quản lý hồ sơ" }
+    ]
+  },
   "scripts": {
     "build": "node esbuild.mjs",
     "typecheck": "tsc --noEmit",
