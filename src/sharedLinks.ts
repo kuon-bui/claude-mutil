@@ -96,6 +96,20 @@ export async function linkShared(defaultDir: string, profileDir: string, platfor
   return report;
 }
 
+/**
+ * Chuẩn bị thư mục của hồ sơ trước mỗi lần Claude Code có thể dùng nó (chọn hồ sơ, đăng nhập, kích hoạt, xoá thất bại):
+ * tạo lại thư mục nếu mất và nối lại phần dùng chung, không ghi đè gì. Nếu bỏ qua bước này, Claude Code tự tạo
+ * `projects/` thật trong hồ sơ, lịch sử tách ra mà không ai biết, và lần xoá hồ sơ sau sẽ xoá luôn phần đó.
+ * Trả về các thư mục dùng chung không nối được (đã có sẵn dạng thư mục thật) để cảnh báo.
+ */
+export async function prepareProfileDir(
+  profile: { configDir: string; isDefault: boolean }, defaultDir: string, platform: NodeJS.Platform,
+): Promise<string[]> {
+  if (profile.isDefault) return [];
+  const report = await linkShared(defaultDir, profile.configDir, platform);
+  return report.skipped.filter((name) => (SHARED_DIRS as readonly string[]).includes(name));
+}
+
 /** Gỡ mọi liên kết ở cấp đầu của thư mục hồ sơ. Không xoá file hay thư mục thường. */
 export async function unlinkShared(profileDir: string): Promise<void> {
   let names: string[];

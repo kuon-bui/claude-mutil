@@ -2,7 +2,8 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, test } from 'vitest';
-import { linkShared, removeProfileDir, unlinkShared } from '../src/sharedLinks';
+import type { Profile } from '../src/profileStore';
+import { linkShared, prepareProfileDir, removeProfileDir, unlinkShared } from '../src/sharedLinks';
 
 // Mọi test chạy dưới thư mục có dấu cách và ký tự tiếng Việt, với process.platform thật (junction trên Windows).
 let tmp: string;
@@ -97,6 +98,35 @@ test('unlinkShared gỡ liên kết, giữ nguyên dữ liệu đích và các f
   expect(await exists(path.join(prof, 'projects'))).toBe(false);
   expect(await exists(path.join(prof, 'settings.json'))).toBe(true);
   expect(await read(path.join(def, 'projects', 'h.jsonl'))).toBe('quan trọng');
+});
+
+const profileAt = (configDir: string, isDefault = false): Profile =>
+  ({ id: isDefault ? 'default' : 'x1', name: 'Công ty A', color: 'charts.green', configDir, isDefault });
+
+test('prepareProfileDir: hồ sơ mất junction projects (xoá dở) thì được nối lại, lịch sử không tách', async () => {
+  await fs.mkdir(path.join(def, 'projects'), { recursive: true });
+  await linkShared(def, prof, process.platform);
+  await unlinkShared(prof); // như removeProfileDir thất bại sau khi đã gỡ liên kết
+  expect(await prepareProfileDir(profileAt(prof), def, process.platform)).toEqual([]);
+  await fs.writeFile(path.join(prof, 'projects', 'moi.jsonl'), 'x');
+  expect(await read(path.join(def, 'projects', 'moi.jsonl'))).toBe('x');
+});
+
+test('prepareProfileDir: thư mục hồ sơ bị xoá bên ngoài thì được tạo lại kèm liên kết', async () => {
+  await fs.mkdir(path.join(def, 'projects'), { recursive: true });
+  await fs.rm(prof, { recursive: true });
+  expect(await prepareProfileDir(profileAt(prof), def, process.platform)).toEqual([]);
+  expect((await fs.lstat(path.join(prof, 'projects'))).isSymbolicLink()).toBe(true);
+});
+
+test('prepareProfileDir: projects đã là thư mục thật thì báo lại để cảnh báo người dùng', async () => {
+  await fs.mkdir(path.join(prof, 'projects'), { recursive: true });
+  expect(await prepareProfileDir(profileAt(prof), def, process.platform)).toEqual(['projects']);
+});
+
+test('prepareProfileDir: hồ sơ Mặc định thì không làm gì', async () => {
+  expect(await prepareProfileDir(profileAt(def, true), def, process.platform)).toEqual([]);
+  expect(await exists(path.join(def, 'projects'))).toBe(false);
 });
 
 test('removeProfileDir xoá hồ sơ nhưng giữ nguyên dữ liệu dùng chung', async () => {

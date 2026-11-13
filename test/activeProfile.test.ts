@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { resolveActiveProfile } from '../src/activeProfile';
+import { recheckActive, resolveActiveProfile } from '../src/activeProfile';
 import { BindingStore } from '../src/bindingStore';
 import { ProfileStore } from '../src/profileStore';
 import { memoryStore } from './helpers/memoryStore';
@@ -92,4 +92,45 @@ test('gắn với hồ sơ có thư mục không còn trên đĩa → default, r
   expect(r.profile.id).toBe('default');
   expect(r.reason).toBe('missing-profile');
   expect(asked).toEqual([a.configDir]);
+});
+
+test('recheckActive: hồ sơ được đổi tên ở cửa sổ khác thì lấy tên mới, giữ lý do', async () => {
+  const { profiles, bindings } = setup();
+  const a = await profiles.add('Công ty A');
+  await bindings.set('/w', a.id);
+  const before = resolveActiveProfile(['/w'], profiles, bindings, allDirsExist);
+  await profiles.rename(a.id, 'Công ty A2');
+  const after = recheckActive(before, profiles, allDirsExist);
+  expect(after.profile.name).toBe('Công ty A2');
+  expect(after.reason).toBe('bound');
+});
+
+test('recheckActive: hồ sơ bị xoá ở cửa sổ khác thì về Mặc định, reason missing-profile', async () => {
+  const { profiles, bindings } = setup();
+  const a = await profiles.add('Công ty A');
+  await bindings.set('/w', a.id);
+  const before = resolveActiveProfile(['/w'], profiles, bindings, allDirsExist);
+  await profiles.remove(a.id);
+  const after = recheckActive(before, profiles, allDirsExist);
+  expect(after.profile.id).toBe('default');
+  expect(after.reason).toBe('missing-profile');
+});
+
+test('recheckActive: thư mục hồ sơ bị xoá bên ngoài khi cửa sổ đang mở thì missing-profile', async () => {
+  const { profiles, bindings } = setup();
+  const a = await profiles.add('Công ty A');
+  await bindings.set('/w', a.id);
+  const before = resolveActiveProfile(['/w'], profiles, bindings, allDirsExist);
+  const after = recheckActive(before, profiles, () => false);
+  expect(after.profile.id).toBe('default');
+  expect(after.reason).toBe('missing-profile');
+});
+
+test('recheckActive: đang dùng Mặc định thì giữ lý do, lấy tên mới nếu đổi tên', async () => {
+  const { profiles, bindings } = setup();
+  await profiles.add('Công ty A');
+  const before = resolveActiveProfile(['/w'], profiles, bindings, allDirsExist);
+  await profiles.rename('default', 'Cá nhân');
+  const after = recheckActive(before, profiles, () => false);
+  expect(after).toEqual({ profile: expect.objectContaining({ id: 'default', name: 'Cá nhân' }), reason: 'unbound' });
 });

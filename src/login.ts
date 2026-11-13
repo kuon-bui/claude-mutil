@@ -6,6 +6,8 @@ export const POLL_MS = 2000;
 export const TIMEOUT_MS = 300_000;
 
 export interface LoginTerminal {
+  /** Terminal chạy thẳng file `claude` nên biết được mã thoát; `false` khi lệnh được gõ vào một shell. */
+  readonly reportsExit: boolean;
   dispose(): void;
   /** Mã thoát của tiến trình đăng nhập; `undefined` khi còn chạy (hoặc không biết được). */
   exitCode(): number | undefined;
@@ -24,8 +26,10 @@ export interface LoginDeps {
 export type LoginResult = 'signed-in' | 'timeout' | 'no-cli' | 'failed';
 
 /**
- * Mở terminal đăng nhập vào hồ sơ rồi chờ. Xong khi: có email mới khác email trước khi mở, hoặc tiến trình thoát
- * mã 0 và có email (trường hợp đăng nhập lại đúng tài khoản cũ). Tiến trình thoát mã khác 0 → `failed`.
+ * Mở terminal đăng nhập vào hồ sơ rồi chờ.
+ * - Terminal báo được mã thoát: chờ tiến trình tự thoát (không đóng giữa chừng khi nó còn có thể đang ghi đăng nhập);
+ *   thoát mã 0 và có email → `signed-in`, ngược lại → `failed`. Đăng nhập lại đúng tài khoản cũ cũng nhận ra được.
+ * - Không biết mã thoát (lệnh gõ vào shell): xong khi có email khác email trước khi mở; terminal bị đóng → `failed`.
  */
 export async function runLogin(profile: Profile, deps: LoginDeps): Promise<LoginResult> {
   const cli = await deps.findCli();
@@ -35,9 +39,17 @@ export async function runLogin(profile: Profile, deps: LoginDeps): Promise<Login
   const terminal = deps.openTerminal(`Claude: đăng nhập ${profile.name}`, env, cli, [...LOGIN_ARGS]);
   for (let i = 0; i < TIMEOUT_MS / POLL_MS; i++) {
     await deps.sleep(POLL_MS);
-    const email = await deps.readEmail();
     const code = terminal.exitCode();
-    if (email && (email !== baseline || code === 0)) {
+    const email = await deps.readEmail();
+    if (terminal.reportsExit) {
+      if (code === undefined) continue;
+      if (code === 0 && email) {
+        terminal.dispose();
+        return 'signed-in';
+      }
+      return 'failed';
+    }
+    if (email && email !== baseline) {
       terminal.dispose();
       return 'signed-in';
     }

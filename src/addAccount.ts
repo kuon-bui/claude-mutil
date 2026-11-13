@@ -5,8 +5,7 @@ import * as vscode from 'vscode';
 import { readAccountEmail } from './accountInfo';
 import type { App } from './app';
 import { resolveCli, runLogin, type LoginDeps, type LoginResult } from './login';
-import { DEFAULT_PROFILE_ID, type Profile } from './profileStore';
-import { linkShared, SHARED_DIRS } from './sharedLinks';
+import type { Profile } from './profileStore';
 
 function claudeOnPath(): Promise<boolean> {
   return new Promise((resolve) => {
@@ -33,6 +32,7 @@ export function vscodeLoginDeps(app: App, profile: Profile): LoginDeps {
       if (!direct) terminal.sendText(`${cli} ${args.join(' ')}`);
       terminal.show();
       return {
+        reportsExit: direct,
         dispose: () => terminal.dispose(),
         exitCode: () => (terminal.exitStatus ? terminal.exitStatus.code ?? -1 : undefined),
       };
@@ -42,8 +42,12 @@ export function vscodeLoginDeps(app: App, profile: Profile): LoginDeps {
   };
 }
 
-/** Chạy đăng nhập kèm thông báo tiến trình; dùng cho cả thêm tài khoản và đăng nhập lại. */
-export function loginWithProgress(app: App, profile: Profile): Thenable<LoginResult> {
+/**
+ * Chạy đăng nhập kèm thông báo tiến trình; dùng cho cả thêm tài khoản và đăng nhập lại. Chuẩn bị thư mục hồ sơ trước,
+ * vì `claude auth login` tự tạo thư mục cấu hình nếu nó đã bị xoá, nhưng không có liên kết dùng chung.
+ */
+export async function loginWithProgress(app: App, profile: Profile): Promise<LoginResult> {
+  await app.prepare(profile);
   return vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: `Đang chờ đăng nhập ${profile.name} trong terminal…` },
     () => runLogin(profile, vscodeLoginDeps(app, profile)),
@@ -71,7 +75,8 @@ export async function reportLogin(app: App, profile: Profile, result: LoginResul
       void vscode.window.showWarningMessage('Đăng nhập chưa thành công (xem terminal); hồ sơ vẫn được giữ, bạn có thể đăng nhập lại từ Quản lý hồ sơ.');
       return;
     case 'no-cli':
-      void vscode.window.showInformationMessage('Không tìm thấy lệnh claude. Sau khi tải lại cửa sổ, hãy đăng nhập trong khung Claude.');
+      void vscode.window.showInformationMessage(
+        `Không tìm thấy lệnh claude. Cửa sổ này sẽ chuyển sang ${profile.name}; hãy đăng nhập trong khung Claude.`);
       await app.selectProfile(profile);
       return;
   }
@@ -93,15 +98,7 @@ export async function runAddAccount(app: App): Promise<void> {
   });
   if (name === undefined) return;
 
-  // 2. Tạo hồ sơ, thư mục và phần dùng chung.
+  // 2–3. Tạo hồ sơ; thư mục và phần dùng chung được chuẩn bị ngay trước khi đăng nhập.
   const profile = await app.profiles.add(name);
-  await fs.promises.mkdir(profile.configDir, { recursive: true });
-  const report = await linkShared(app.profiles.get(DEFAULT_PROFILE_ID)!.configDir, profile.configDir, process.platform);
-  const notShared = report.skipped.filter((n) => (SHARED_DIRS as readonly string[]).includes(n));
-  if (notShared.length > 0) {
-    void vscode.window.showWarningMessage(`Không dùng chung được: ${notShared.join(', ')} (đã có sẵn trong ${profile.configDir}).`);
-  }
-
-  // 3. Đăng nhập.
   await reportLogin(app, profile, await loginWithProgress(app, profile));
 }

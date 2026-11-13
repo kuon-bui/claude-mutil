@@ -10,7 +10,7 @@ const CLI = 'C:\\ext\\resources\\native-binary\\claude.exe';
  * Deps giả có kịch bản: `emails[i]` là kết quả lần đọc thứ i (lần 0 là mốc trước khi mở terminal),
  * `exitAt` là lần hỏi (tính từ 0, sau khi mở terminal) mà tiến trình đăng nhập thoát với `exitCode`.
  */
-function fakeDeps(opts: { cli?: string; emails: (string | undefined)[]; exitAt?: number; exitCode?: number }) {
+function fakeDeps(opts: { cli?: string; emails: (string | undefined)[]; exitAt?: number; exitCode?: number; reportsExit?: boolean }) {
   const calls = { opened: [] as unknown[][], disposed: 0, reads: 0, sleeps: [] as number[] };
   let polls = 0;
   const deps: LoginDeps = {
@@ -18,6 +18,7 @@ function fakeDeps(opts: { cli?: string; emails: (string | undefined)[]; exitAt?:
     openTerminal: (...args) => {
       calls.opened.push(args);
       return {
+        reportsExit: opts.reportsExit ?? opts.exitAt !== undefined,
         dispose: () => { calls.disposed++; },
         exitCode: () => (opts.exitAt !== undefined && polls >= opts.exitAt ? opts.exitCode ?? 0 : undefined),
       };
@@ -81,6 +82,13 @@ test('đăng nhập lại: email cũ còn đó thì chưa tính là xong; xong k
 test('đăng nhập lại sang tài khoản khác: email đổi thì xong ngay', async () => {
   const { deps } = fakeDeps({ cli: CLI, emails: ['cu@x.com', 'cu@x.com', 'moi@x.com'] });
   expect(await runLogin(profile, deps)).toBe('signed-in');
+});
+
+test('terminal báo được mã thoát: thấy email mới nhưng tiến trình chưa thoát thì chưa đóng (có thể đang ghi đăng nhập)', async () => {
+  const { deps, calls } = fakeDeps({ cli: CLI, emails: [undefined, 'a@x.com'], exitAt: 3, exitCode: 0 });
+  expect(await runLogin(profile, deps)).toBe('signed-in');
+  expect(calls.sleeps.length).toBe(3);
+  expect(calls.disposed).toBe(1);
 });
 
 test('tiến trình thoát mã khác 0 thì trả failed, giữ terminal để người dùng xem lỗi', async () => {

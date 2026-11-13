@@ -42,10 +42,12 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.commands.registerCommand('claudeAccounts.switch', (options?: { title?: string }) => runSwitch(app, options)),
     vscode.commands.registerCommand('claudeAccounts.add', () => runAddAccount(app)),
     vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app)),
-    // Email có thể đổi khi người dùng đăng nhập ở nơi khác; vẽ lại mỗi khi cửa sổ được focus.
-    vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.render(); }),
+    // Hồ sơ có thể bị đổi tên/xoá ở cửa sổ khác, thư mục bị xoá bên ngoài, email đổi: kiểm lại mỗi khi cửa sổ được focus.
+    vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.refresh(); }),
   );
   await app.render();
+  // Nối lại phần dùng chung nếu hồ sơ đang dùng bị mất liên kết (ví dụ lần xoá trước thất bại giữa chừng).
+  if (app.resolution.reason === 'bound') void app.prepare(app.resolution.profile);
 
   // Thiết lập claudeCode.environmentVariables có CLAUDE_CONFIG_DIR sẽ thắng process.env (bản thử Task 1).
   const override = configDirOverride(config, process.platform);

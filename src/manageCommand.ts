@@ -53,6 +53,8 @@ async function remove(app: App, profile: Profile): Promise<void> {
       profiles: app.profiles, bindings: app.bindings, root: profilesRoot(app.home), removeDir: removeProfileDir,
     });
   } catch (err) {
+    // Xoá có thể đã gỡ liên kết trước khi lỗi: nối lại ngay để hồ sơ còn lại không tách lịch sử.
+    await app.prepare(profile).catch(() => {});
     void vscode.window.showErrorMessage(
       `Không xoá được hồ sơ ${profile.name}: ${(err as Error).message}. Nếu Claude đang chạy bằng hồ sơ này, hãy đóng các cửa sổ đó rồi thử lại.`);
     return;
