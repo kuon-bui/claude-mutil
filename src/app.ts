@@ -1,6 +1,6 @@
 import fs from 'node:fs';
 import * as vscode from 'vscode';
-import { readAccountEmail } from './accountInfo';
+import { readAccountInfo } from './accountInfo';
 import { recheckActive, resolveActiveProfile, type Resolution } from './activeProfile';
 import { configDirOverride, type ConfigAccess, type ProfileApplier } from './applier';
 import type { BindingStore } from './bindingStore';
@@ -33,10 +33,10 @@ export class App {
   }
 
   async render(): Promise<void> {
-    const email = await readAccountEmail(this.resolution.profile, this.home);
-    const view = statusView(this.resolution, email, this.applier.perWindow, configDirOverride(this.config, process.platform));
+    const { email, usage } = await readAccountInfo(this.resolution.profile, this.home);
+    const view = statusView(this.resolution, email, this.applier.perWindow, configDirOverride(this.config, process.platform), usage);
     this.item.text = view.text;
-    this.item.tooltip = view.tooltip;
+    this.item.tooltip = new vscode.MarkdownString(view.tooltip);
     this.item.color = new vscode.ThemeColor(view.color);
     this.item.backgroundColor = view.warning ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
     this.item.show();

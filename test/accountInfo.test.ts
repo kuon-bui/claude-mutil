@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, test } from 'vitest';
-import { readAccountEmail } from '../src/accountInfo';
+import { readAccountEmail, readAccountInfo } from '../src/accountInfo';
 import type { Profile } from '../src/profileStore';
 
 let home: string;
@@ -51,4 +51,53 @@ test('emailAddress rỗng hoặc không phải chuỗi trả về undefined', as
   expect(await readAccountEmail(p, home)).toBeUndefined();
   await fs.writeFile(path.join(dir, '.claude.json'), claudeJson(42));
   expect(await readAccountEmail(p, home)).toBeUndefined();
+});
+
+const withUsage = (accountUuid: string, utilization: Record<string, unknown>) => JSON.stringify({
+  oauthAccount: { accountUuid: 'u', emailAddress: 'a@x.com' },
+  cachedUsageUtilization: { fetchedAtMs: 1000, accountUuid, utilization },
+});
+
+test('quota: đọc danh sách limits trong cachedUsageUtilization', async () => {
+  await fs.writeFile(path.join(dir, '.claude.json'), withUsage('u', {
+    five_hour: { utilization: 99, resets_at: '2026-11-16T05:30:00+00:00' },
+    limits: [
+      { kind: 'session', percent: 40, resets_at: '2026-11-16T05:30:00.917973+00:00' },
+      { kind: 'weekly_all', percent: 7, resets_at: '2026-11-21T08:00:00+00:00' },
+      { kind: 'weekly_scoped', percent: 0, resets_at: null, scope: { model: { id: null, display_name: 'Fable' } } },
+      { kind: 'weekly_all', percent: null },
+    ],
+  }));
+  expect(await readAccountInfo(p, home)).toEqual({
+    email: 'a@x.com',
+    usage: {
+      fetchedAt: 1000,
+      limits: [
+        { label: 'Session (5h)', percent: 40, resetsAt: Date.parse('2026-11-16T05:30:00.917Z') },
+        { label: 'Weekly', percent: 7, resetsAt: Date.parse('2026-11-21T08:00:00Z') },
+        { label: 'Weekly (Fable)', percent: 0, resetsAt: undefined },
+      ],
+    },
+  });
+});
+
+test('quota: bản cũ không có limits thì đọc five_hour, seven_day', async () => {
+  await fs.writeFile(path.join(dir, '.claude.json'), withUsage('u', {
+    five_hour: { utilization: 12, resets_at: '2026-11-16T05:30:00+00:00' },
+    seven_day: { utilization: 3, resets_at: null },
+    seven_day_opus: null,
+  }));
+  expect((await readAccountInfo(p, home)).usage?.limits).toEqual([
+    { label: 'Session (5h)', percent: 12, resetsAt: Date.parse('2026-11-16T05:30:00Z') },
+    { label: 'Weekly', percent: 3, resetsAt: undefined },
+  ]);
+});
+
+test('quota: bản lưu của tài khoản khác, thiếu hoặc hỏng thì bỏ qua, email vẫn đọc được', async () => {
+  await fs.writeFile(path.join(dir, '.claude.json'), withUsage('khac', { limits: [{ kind: 'session', percent: 40 }] }));
+  expect(await readAccountInfo(p, home)).toEqual({ email: 'a@x.com', usage: undefined });
+  await fs.writeFile(path.join(dir, '.claude.json'), claudeJson('a@x.com'));
+  expect(await readAccountInfo(p, home)).toEqual({ email: 'a@x.com', usage: undefined });
+  await fs.writeFile(path.join(dir, '.claude.json'), withUsage('u', { limits: 'hỏng' }));
+  expect((await readAccountInfo(p, home)).usage).toBeUndefined();
 });

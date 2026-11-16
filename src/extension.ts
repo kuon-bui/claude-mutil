@@ -64,6 +64,10 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
       warnOverride(config);
     }),
   );
+  // Quota trong tooltip là bản Claude Code lưu vào `.claude.json` và thời gian tương đối ("resets in…"): vẽ lại mỗi phút
+  // để tooltip theo kịp bản lưu mới và không chỉ giờ cũ.
+  const timer = setInterval(() => void app.render(), 60_000);
+  ctx.subscriptions.push({ dispose: () => clearInterval(timer) });
   await app.render();
   // Nối lại phần dùng chung nếu hồ sơ đang dùng bị mất liên kết (ví dụ lần xoá trước thất bại giữa chừng).
   if (app.resolution.reason === 'bound') void app.prepare(app.resolution.profile);
