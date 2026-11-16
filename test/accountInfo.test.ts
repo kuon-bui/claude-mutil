@@ -2,7 +2,7 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, expect, test } from 'vitest';
-import { readAccountEmail, readAccountInfo } from '../src/accountInfo';
+import { accountKind, readAccountEmail, readAccountInfo } from '../src/accountInfo';
 import type { Profile } from '../src/profileStore';
 
 let home: string;
@@ -19,7 +19,26 @@ afterEach(async () => {
   await fs.rm(home, { recursive: true, force: true });
 });
 
-const claudeJson = (email: unknown) => JSON.stringify({ numStartups: 3, oauthAccount: { accountUuid: 'u', emailAddress: email, organizationName: 'Org' } });
+const claudeJson = (email: unknown) => JSON.stringify({
+  numStartups: 3,
+  oauthAccount: { accountUuid: 'u', emailAddress: email, organizationName: 'Org', organizationType: 'claude_team' },
+});
+
+test('accountKind: Pro, Team, chuỗi khác, thiếu', () => {
+  expect(accountKind({ organizationType: 'claude_pro' })).toEqual({ label: 'Pro' });
+  expect(accountKind({ organizationType: 'claude_team', organizationName: 'Godgroup' }))
+    .toEqual({ label: 'Team', organization: 'Godgroup' });
+  expect(accountKind({ organizationType: 'enterprise' })).toEqual({ label: 'enterprise' });
+  expect(accountKind(undefined)).toEqual({ label: 'Unknown' });
+  expect(accountKind({ organizationType: 1, organizationName: 'X' })).toEqual({ label: 'Unknown' });
+});
+
+test('readAccountInfo: kind từ oauthAccount, không có file thì Unknown', async () => {
+  await fs.writeFile(path.join(dir, '.claude.json'), claudeJson('a@x.com'));
+  const info = await readAccountInfo(p, home);
+  expect(info.kind).toEqual({ label: 'Team', organization: 'Org' });
+  expect((await readAccountInfo({ ...p, configDir: path.join(dir, 'missing') }, home)).kind).toEqual({ label: 'Unknown' });
+});
 
 test('hồ sơ thường: đọc <configDir>/.claude.json', async () => {
   await fs.writeFile(path.join(dir, '.claude.json'), claudeJson('a@x.com'));
@@ -70,6 +89,7 @@ test('quota: đọc danh sách limits trong cachedUsageUtilization', async () =>
   }));
   expect(await readAccountInfo(p, home)).toEqual({
     email: 'a@x.com',
+    kind: { label: 'Unknown' },
     usage: {
       fetchedAt: 1000,
       limits: [
@@ -95,9 +115,11 @@ test('quota: bản cũ không có limits thì đọc five_hour, seven_day', asyn
 
 test('quota: bản lưu của tài khoản khác, thiếu hoặc hỏng thì bỏ qua, email vẫn đọc được', async () => {
   await fs.writeFile(path.join(dir, '.claude.json'), withUsage('khac', { limits: [{ kind: 'session', percent: 40 }] }));
-  expect(await readAccountInfo(p, home)).toEqual({ email: 'a@x.com', usage: undefined });
+  expect(await readAccountInfo(p, home)).toEqual({ email: 'a@x.com', usage: undefined, kind: { label: 'Unknown' } });
   await fs.writeFile(path.join(dir, '.claude.json'), claudeJson('a@x.com'));
-  expect(await readAccountInfo(p, home)).toEqual({ email: 'a@x.com', usage: undefined });
+  expect(await readAccountInfo(p, home)).toEqual({
+    email: 'a@x.com', usage: undefined, kind: { label: 'Team', organization: 'Org' },
+  });
   await fs.writeFile(path.join(dir, '.claude.json'), withUsage('u', { limits: 'hỏng' }));
   expect((await readAccountInfo(p, home)).usage).toBeUndefined();
 });

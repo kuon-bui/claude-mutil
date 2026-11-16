@@ -6,7 +6,18 @@ import type { Profile } from './profileStore';
 export interface UsageLimit { label: string; percent: number; resetsAt?: number }
 /** Quota Claude Code lưu lần gần nhất, kèm thời điểm lấy (ms từ epoch). */
 export interface AccountUsage { fetchedAt: number; limits: UsageLimit[] }
-export interface AccountInfo { email?: string; usage?: AccountUsage }
+export interface AccountKind { label: string; organization?: string }
+export interface AccountInfo { email?: string; usage?: AccountUsage; kind: AccountKind }
+
+/** Type gói từ `oauthAccount.organizationType`: Pro / Team / nguyên chuỗi / Unknown. */
+export function accountKind(oauth: unknown): AccountKind {
+  const obj = oauth !== null && typeof oauth === 'object' ? oauth as { organizationType?: unknown; organizationName?: unknown } : undefined;
+  const t = obj?.organizationType;
+  const label = t === 'claude_pro' ? 'Pro' : t === 'claude_team' ? 'Team' : typeof t === 'string' ? t : 'Unknown';
+  const name = obj?.organizationName;
+  const organization = typeof t === 'string' && typeof name === 'string' && name ? name : undefined;
+  return organization === undefined ? { label } : { label, organization };
+}
 
 /** `.claude.json` của hồ sơ, như Claude Code: trong CLAUDE_CONFIG_DIR nếu biến được đặt, không thì trong home. */
 function claudeJsonPath(profile: Profile, home: string): string {
@@ -25,11 +36,11 @@ export async function readAccountInfo(profile: Profile, home: string): Promise<A
   try {
     data = JSON.parse(await fs.readFile(claudeJsonPath(profile, home), 'utf8'));
   } catch {
-    return {};
+    return { kind: accountKind(undefined) };
   }
   const account = (data as { oauthAccount?: { emailAddress?: unknown } } | null)?.oauthAccount;
   const email = typeof account?.emailAddress === 'string' && account.emailAddress ? account.emailAddress : undefined;
-  return { email, usage: email === undefined ? undefined : parseUsage(data) };
+  return { email, usage: email === undefined ? undefined : parseUsage(data), kind: accountKind(account) };
 }
 
 export async function readAccountEmail(profile: Profile, home: string): Promise<string | undefined> {
