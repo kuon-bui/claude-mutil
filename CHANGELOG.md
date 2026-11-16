@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/kuon-bui/claude-mutil/compare/v0.2.2...v0.3.0) (2026-11-16)
+
+
+### Features
+
+* add extension icon ([#4](https://github.com/kuon-bui/claude-mutil/issues/4)) ([4f19246](https://github.com/kuon-bui/claude-mutil/commit/4f1924634d7934796d880e502fb6ffce086bea68))
+
 ## [0.2.2](https://github.com/kuon-bui/claude-mutil/compare/v0.2.1...v0.2.2) (2026-11-16)
 
 
