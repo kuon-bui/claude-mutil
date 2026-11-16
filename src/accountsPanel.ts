@@ -6,9 +6,11 @@ import { loginWithProgress, reportLogin, runAddAccount } from './addAccount';
 import { accountsState } from './accountsView';
 import { configDirOverride } from './applier';
 import type { App } from './app';
+import { createLatestGate } from './latestGate';
 import { renameProfile, removeProfile } from './manageCommand';
 
 let panel: vscode.WebviewPanel | undefined;
+const stateGate = createLatestGate();
 
 export function showAccounts(app: App, ctx: vscode.ExtensionContext): void {
   if (panel) {
@@ -36,20 +38,23 @@ export function refreshAccounts(app: App): void {
 }
 
 async function pushState(app: App, target: vscode.WebviewPanel): Promise<void> {
-  const profiles = app.profiles.list();
-  const infos = await Promise.all(profiles.map((p) => readAccountInfo(p, app.home)));
-  const payload = accountsState({
-    profiles,
-    infos,
-    activeId: app.resolution.profile.id,
-    dirExists: fs.existsSync,
-    unbound: app.resolution.reason === 'unbound',
-    hasFolder: app.folders().length > 0,
-    override: configDirOverride(app.config, process.platform),
-    now: Date.now(),
+  await stateGate.run(async () => {
+    const profiles = app.profiles.list();
+    const infos = await Promise.all(profiles.map((p) => readAccountInfo(p, app.home)));
+    return accountsState({
+      profiles,
+      infos,
+      activeId: app.resolution.profile.id,
+      dirExists: fs.existsSync,
+      unbound: app.resolution.reason === 'unbound',
+      hasFolder: app.folders().length > 0,
+      override: configDirOverride(app.config, process.platform),
+      now: Date.now(),
+    });
+  }, (payload) => {
+    if (panel !== target) return;
+    void target.webview.postMessage({ type: 'state', payload });
   });
-  if (panel !== target) return;
-  void target.webview.postMessage({ type: 'state', payload });
 }
 
 async function onMessage(app: App, msg: { type?: string; id?: string }): Promise<void> {

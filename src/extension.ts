@@ -57,6 +57,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.commands.registerCommand('claudeAccounts.add', async () => {
       showAccounts(app, ctx);
       await runAddAccount(app);
+      await app.render();
     }),
     vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app, ctx)),
     // Hồ sơ có thể bị đổi tên/xoá ở cửa sổ khác, thư mục bị xoá bên ngoài, email đổi: kiểm lại mỗi khi cửa sổ được focus.
