@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/kuon-bui/claude-mutil/compare/v0.2.1...v0.2.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* rename extension to claude-account-profiles ([ed815c4](https://github.com/kuon-bui/claude-mutil/commit/ed815c4fb01ffd24524fb01bc0667e6cc05e297b))
+
 ## [0.2.1](https://github.com/kuon-bui/claude-mutil/compare/v0.2.0...v0.2.1) (2026-11-16)
 
 
