@@ -4,6 +4,7 @@
   "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
   "version": "0.2.1",
   "publisher": "kuon",
+  "icon": "images/icon.png",
   "private": true,
   "license": "MIT",
   "repository": {
