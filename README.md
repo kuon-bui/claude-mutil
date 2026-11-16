@@ -1,4 +1,4 @@
-# Claude Accounts
+# Claude Account Profiles
 
 A VS Code extension that keeps several Claude Code accounts signed in at once. Each project remembers its own account, and you switch accounts with one click on the status bar. The extension never reads, copies, or sends tokens.
 
@@ -7,8 +7,8 @@ A VS Code extension that keeps several Claude Code accounts signed in at once. E
 ## Installation
 
 1. You need the **Claude Code** extension (`anthropic.claude-code`), version 2.1.323 or later.
-2. Install **Claude Accounts** (`kuon.claude-multi-account`) from the VS Code Marketplace,
-   or from a terminal: `code --install-extension kuon.claude-multi-account`.
+2. Install **Claude Account Profiles** (`kuon.claude-account-profiles`) from the VS Code Marketplace,
+   or from a terminal: `code --install-extension kuon.claude-account-profiles`.
    A `.vsix` for each version is also attached to the [GitHub releases](https://github.com/kuon-bui/claude-mutil/releases) (**Extensions** → `…` → **Install from VSIX…**).
 3. Reload the window. The status bar (bottom right) shows **Claude: Default**, which is the account you are already signed in with.
 
