@@ -11,6 +11,7 @@ import { statusView } from './statusBar';
 /** Trạng thái chung của một cửa sổ: hồ sơ đang dùng, thanh trạng thái, và thao tác chọn hồ sơ. */
 export class App {
   resolution: Resolution;
+  onDidRender?: () => void;
 
   constructor(
     readonly home: string,
@@ -18,7 +19,7 @@ export class App {
     readonly bindings: BindingStore,
     readonly applier: ProfileApplier,
     private readonly item: vscode.StatusBarItem,
-    private readonly config: ConfigAccess,
+    readonly config: ConfigAccess,
   ) {
     this.resolution = this.resolve();
   }
@@ -40,6 +41,7 @@ export class App {
     this.item.color = new vscode.ThemeColor(view.color);
     this.item.backgroundColor = view.warning ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
     this.item.show();
+    this.onDidRender?.();
   }
 
   /**

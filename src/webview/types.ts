@@ -18,5 +18,5 @@ export interface AccountRow {
 }
 
 export type PanelMessage =
-  | { type: 'add' }
+  | { type: 'add' | 'ready' }
   | { type: 'use' | 'rename' | 'login' | 'delete'; id: string };

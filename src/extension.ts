@@ -1,12 +1,12 @@
 import os from 'node:os';
 import * as vscode from 'vscode';
 import { runAddAccount } from './addAccount';
+import { refreshAccounts, showAccounts } from './accountsPanel';
 import { App } from './app';
 import { configDirOverride, createApplier, type ConfigAccess } from './applier';
 import { BindingStore } from './bindingStore';
-import { runManage } from './manageCommand';
 import { ProfileStore } from './profileStore';
-import { runSwitch } from './switchCommand';
+import { runManage, runSwitch } from './switchCommand';
 import { isSupported } from './versionCheck';
 
 /** Bản Claude Code đã thử trong bản thử Task 1 (docs/spike-results.md). */
@@ -45,6 +45,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   // 2–3. Xác định hồ sơ và áp dụng NGAY, trước mọi await, để biến môi trường có trước khi Claude Code khởi tiến trình.
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   const app = new App(home, profiles, bindings, applier, item, config);
+  app.onDidRender = () => refreshAccounts(app);
   void applier.apply(app.resolution.profile);
 
   // 4. Thanh trạng thái.
@@ -52,9 +53,12 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   item.name = 'Claude Accounts';
   ctx.subscriptions.push(
     item,
-    vscode.commands.registerCommand('claudeAccounts.switch', (options?: { title?: string }) => runSwitch(app, options)),
-    vscode.commands.registerCommand('claudeAccounts.add', () => runAddAccount(app)),
-    vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app)),
+    vscode.commands.registerCommand('claudeAccounts.switch', () => runSwitch(app, ctx)),
+    vscode.commands.registerCommand('claudeAccounts.add', async () => {
+      showAccounts(app, ctx);
+      await runAddAccount(app);
+    }),
+    vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app, ctx)),
     // Hồ sơ có thể bị đổi tên/xoá ở cửa sổ khác, thư mục bị xoá bên ngoài, email đổi: kiểm lại mỗi khi cửa sổ được focus.
     vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.refresh(); }),
     // Thiết lập đè có thể được thêm hoặc gỡ khi cửa sổ đang mở: vẽ lại và cảnh báo nếu vừa xuất hiện.
@@ -85,7 +89,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   const askedKey = 'claudeAccounts.asked';
   if (app.resolution.reason === 'unbound' && !ctx.workspaceState.get(askedKey)) {
     await ctx.workspaceState.update(askedKey, true);
-    void vscode.commands.executeCommand('claudeAccounts.switch', { title: 'Which Claude account should this project use?' });
+    void vscode.commands.executeCommand('claudeAccounts.switch');
   }
 }
 

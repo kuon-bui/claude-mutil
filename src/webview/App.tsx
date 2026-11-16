@@ -1,8 +1,5 @@
 import type { AccountRow, AccountsState, PanelMessage } from './types';
-
-declare function acquireVsCodeApi(): { postMessage(msg: PanelMessage): void };
-
-const vscode = acquireVsCodeApi();
+import { vscode } from './vscode';
 
 function send(msg: PanelMessage): void {
   vscode.postMessage(msg);
