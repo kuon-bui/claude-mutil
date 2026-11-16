@@ -104,3 +104,20 @@ test('resolveCli: ưu tiên file chạy đi kèm Claude Code, rồi tới claude
   expect(resolveCli({ bundled: undefined, bundledExists: false, onPath: true })).toBe('claude');
   expect(resolveCli({ bundled: CLI, bundledExists: false, onPath: false })).toBeUndefined();
 });
+
+test('CLI ghi email rồi thoát giữa hai lần đọc: vẫn tính là signed-in (đọc mã thoát trước email)', async () => {
+  let polls = 0;
+  let exitSeen = false;
+  const deps: LoginDeps = {
+    findCli: async () => CLI,
+    openTerminal: () => ({
+      reportsExit: true,
+      dispose: () => {},
+      // Tiến trình thoát ở lần hỏi thứ 2; .claude.json đã có email ngay khi nó thoát.
+      exitCode: () => { if (polls >= 2) { exitSeen = true; return 0; } return undefined; },
+    }),
+    readEmail: async () => (exitSeen ? 'a@x.com' : undefined),
+    sleep: async () => { polls++; },
+  };
+  expect(await runLogin(profile, deps)).toBe('signed-in');
+});

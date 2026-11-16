@@ -4,6 +4,9 @@ import path from 'node:path';
 import * as vscode from 'vscode';
 import { readAccountEmail } from './accountInfo';
 import type { App } from './app';
+import { createProfile } from './createProfile';
+import { profilesRoot } from './paths';
+import { removeProfileDir } from './sharedLinks';
 import { resolveCli, runLogin, type LoginDeps, type LoginResult } from './login';
 import type { Profile } from './profileStore';
 
@@ -98,7 +101,17 @@ export async function runAddAccount(app: App): Promise<void> {
   });
   if (name === undefined) return;
 
-  // 2–3. Tạo hồ sơ; thư mục và phần dùng chung được chuẩn bị ngay trước khi đăng nhập.
-  const profile = await app.profiles.add(name);
+  // 2. Tạo hồ sơ cùng thư mục và phần dùng chung; lỗi thì gỡ sạch, không để hồ sơ nửa vời.
+  let profile: Profile;
+  try {
+    profile = await createProfile(name, {
+      profiles: app.profiles, root: profilesRoot(app.home), prepare: (p) => app.prepare(p), removeDir: removeProfileDir,
+    });
+  } catch (err) {
+    void vscode.window.showErrorMessage(`Không tạo được hồ sơ ${name.trim()}: ${(err as Error).message}`);
+    return;
+  }
+
+  // 3. Đăng nhập.
   await reportLogin(app, profile, await loginWithProgress(app, profile));
 }

@@ -48,3 +48,10 @@ test('envSetting thêm ghi chú áp dụng cho mọi cửa sổ vào tooltip', (
   expect(statusView(res(p('Công ty A', 'charts.green'), 'bound'), 'a@x.com', false).tooltip)
     .toBe('a@x.com · áp dụng cho mọi cửa sổ');
 });
+
+test('thiết lập claudeCode.environmentVariables đang ép CLAUDE_CONFIG_DIR: cảnh báo, nêu thư mục bị ép', () => {
+  const v = statusView(res(p('Công ty A', 'charts.green'), 'bound'), 'a@x.com', true, 'D:\khac');
+  expect(v.text).toBe('$(warning) Claude: thiết lập đang ép thư mục cấu hình');
+  expect(v.tooltip).toBe('claudeCode.environmentVariables đặt CLAUDE_CONFIG_DIR = D:\khac; Claude Accounts không đổi được tài khoản.');
+  expect(v.warning).toBe(true);
+});

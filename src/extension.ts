@@ -19,6 +19,19 @@ function claudeCodeConfig(): ConfigAccess {
   };
 }
 
+/** Thiết lập claudeCode.environmentVariables có CLAUDE_CONFIG_DIR sẽ thắng process.env (bản thử Task 1). */
+function warnOverride(config: ConfigAccess): void {
+  const override = configDirOverride(config, process.platform);
+  if (override === undefined) return;
+  const open = 'Mở thiết lập';
+  void vscode.window.showWarningMessage(
+    `Thiết lập claudeCode.environmentVariables đang đặt CLAUDE_CONFIG_DIR (${override}), nên Claude Accounts không đổi được tài khoản. Hãy xoá CLAUDE_CONFIG_DIR khỏi thiết lập đó.`,
+    open,
+  ).then((choice) => {
+    if (choice === open) void vscode.commands.executeCommand('workbench.action.openSettings', 'claudeCode.environmentVariables');
+  });
+}
+
 export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   // 1. Kho hồ sơ và cặp thư mục–hồ sơ. CLAUDE_CONFIG_DIR có sẵn lúc này đến từ ngoài VS Code (mỗi lần tải lại cửa sổ,
   //    extension host nhận lại môi trường gốc): coi đó là thư mục của hồ sơ Mặc định thay vì xoá nó.
@@ -31,7 +44,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
   // 2–3. Xác định hồ sơ và áp dụng NGAY, trước mọi await, để biến môi trường có trước khi Claude Code khởi tiến trình.
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
-  const app = new App(home, profiles, bindings, applier, item);
+  const app = new App(home, profiles, bindings, applier, item, config);
   void applier.apply(app.resolution.profile);
 
   // 4. Thanh trạng thái.
@@ -44,22 +57,17 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app)),
     // Hồ sơ có thể bị đổi tên/xoá ở cửa sổ khác, thư mục bị xoá bên ngoài, email đổi: kiểm lại mỗi khi cửa sổ được focus.
     vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.refresh(); }),
+    // Thiết lập đè có thể được thêm hoặc gỡ khi cửa sổ đang mở: vẽ lại và cảnh báo nếu vừa xuất hiện.
+    vscode.workspace.onDidChangeConfiguration((e) => {
+      if (!e.affectsConfiguration('claudeCode.environmentVariables')) return;
+      void app.render();
+      warnOverride(config);
+    }),
   );
   await app.render();
   // Nối lại phần dùng chung nếu hồ sơ đang dùng bị mất liên kết (ví dụ lần xoá trước thất bại giữa chừng).
   if (app.resolution.reason === 'bound') void app.prepare(app.resolution.profile);
-
-  // Thiết lập claudeCode.environmentVariables có CLAUDE_CONFIG_DIR sẽ thắng process.env (bản thử Task 1).
-  const override = configDirOverride(config, process.platform);
-  if (override !== undefined) {
-    const open = 'Mở thiết lập';
-    void vscode.window.showWarningMessage(
-      `Thiết lập claudeCode.environmentVariables đang đặt CLAUDE_CONFIG_DIR (${override}), nên Claude Accounts không đổi được tài khoản. Hãy xoá CLAUDE_CONFIG_DIR khỏi thiết lập đó.`,
-      open,
-    ).then((choice) => {
-      if (choice === open) void vscode.commands.executeCommand('workbench.action.openSettings', 'claudeCode.environmentVariables');
-    });
-  }
+  warnOverride(config);
 
   // 5. Cảnh báo phiên bản Claude Code, một lần cho mỗi bản đang cài.
   const installed = vscode.extensions.getExtension('anthropic.claude-code')?.packageJSON?.version as string | undefined;

@@ -39,6 +39,17 @@ async function rename(app: App, profile: Profile): Promise<void> {
 }
 
 async function remove(app: App, profile: Profile): Promise<void> {
+  // Claude đang chạy bằng hồ sơ này trong cửa sổ này sẽ tiếp tục ghi vào thư mục của nó và tạo lại thư mục sau khi xoá.
+  // Chuyển cửa sổ về Mặc định và tải lại trước, rồi mới xoá.
+  if (app.resolution.profile.id === profile.id) {
+    const fallback = app.profiles.get(DEFAULT_PROFILE_ID)!;
+    const move = `Chuyển về ${fallback.name}`;
+    const choice = await vscode.window.showWarningMessage(
+      `Cửa sổ này đang dùng hồ sơ ${profile.name}. Chuyển cửa sổ về ${fallback.name} và tải lại trước, rồi mở lại Quản lý hồ sơ để xoá.`, move);
+    if (choice === move) await app.selectProfile(fallback);
+    return;
+  }
+
   let detail = 'Đăng nhập của hồ sơ này sẽ bị xoá. Lịch sử hội thoại dùng chung được giữ lại.';
   if (process.platform === 'darwin') {
     detail += ' Mục đăng nhập trong Keychain không bị xoá; hãy đăng xuất trong Claude trước nếu muốn gỡ hẳn.';
@@ -47,7 +58,6 @@ async function remove(app: App, profile: Profile): Promise<void> {
   const choice = await vscode.window.showWarningMessage(`Xoá hồ sơ ${profile.name}?`, { modal: true, detail }, confirm);
   if (choice !== confirm) return;
 
-  const wasActive = app.resolution.profile.id === profile.id;
   try {
     await deleteProfile(profile.id, {
       profiles: app.profiles, bindings: app.bindings, root: profilesRoot(app.home), removeDir: removeProfileDir,
@@ -61,14 +71,7 @@ async function remove(app: App, profile: Profile): Promise<void> {
   }
 
   app.resolution = app.resolve();
-  if (wasActive) {
-    const fallback = app.profiles.get(DEFAULT_PROFILE_ID)!;
-    await app.applier.apply(fallback);
-    await app.render();
-    await app.offerReload(fallback);
-  } else {
-    await app.render();
-  }
+  await app.render();
 }
 
 export async function runManage(app: App): Promise<void> {

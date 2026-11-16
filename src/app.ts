@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import * as vscode from 'vscode';
 import { readAccountEmail } from './accountInfo';
 import { recheckActive, resolveActiveProfile, type Resolution } from './activeProfile';
-import type { ProfileApplier } from './applier';
+import { configDirOverride, type ConfigAccess, type ProfileApplier } from './applier';
 import type { BindingStore } from './bindingStore';
 import { DEFAULT_PROFILE_ID, type Profile, type ProfileStore } from './profileStore';
 import { prepareProfileDir } from './sharedLinks';
@@ -18,6 +18,7 @@ export class App {
     readonly bindings: BindingStore,
     readonly applier: ProfileApplier,
     private readonly item: vscode.StatusBarItem,
+    private readonly config: ConfigAccess,
   ) {
     this.resolution = this.resolve();
   }
@@ -33,7 +34,7 @@ export class App {
 
   async render(): Promise<void> {
     const email = await readAccountEmail(this.resolution.profile, this.home);
-    const view = statusView(this.resolution, email, this.applier.perWindow);
+    const view = statusView(this.resolution, email, this.applier.perWindow, configDirOverride(this.config, process.platform));
     this.item.text = view.text;
     this.item.tooltip = view.tooltip;
     this.item.color = new vscode.ThemeColor(view.color);
