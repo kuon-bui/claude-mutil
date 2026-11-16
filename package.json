@@ -3,9 +3,16 @@
   "displayName": "Claude Accounts",
   "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
   "version": "0.1.0",
-  "publisher": "claude-accounts-local",
+  "publisher": "kuon",
   "private": true,
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kuon-bui/claude-mutil.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kuon-bui/claude-mutil/issues"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
@@ -21,16 +28,29 @@
   ],
   "contributes": {
     "commands": [
-      { "command": "claudeAccounts.switch", "category": "Claude Accounts", "title": "Switch Account" },
-      { "command": "claudeAccounts.add", "category": "Claude Accounts", "title": "Add Account" },
-      { "command": "claudeAccounts.manage", "category": "Claude Accounts", "title": "Manage Profiles" }
+      {
+        "command": "claudeAccounts.switch",
+        "category": "Claude Accounts",
+        "title": "Switch Account"
+      },
+      {
+        "command": "claudeAccounts.add",
+        "category": "Claude Accounts",
+        "title": "Add Account"
+      },
+      {
+        "command": "claudeAccounts.manage",
+        "category": "Claude Accounts",
+        "title": "Manage Profiles"
+      }
     ]
   },
   "scripts": {
+    "vscode:prepublish": "npm run build",
     "build": "node esbuild.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "package": "vsce package --allow-missing-repository --skip-license"
+    "package": "vsce package"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",
