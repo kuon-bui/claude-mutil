@@ -1,5 +1,5 @@
 {
-  "name": "claude-account-switcher",
+  "name": "claude-multi-account",
   "displayName": "Claude Accounts",
   "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
   "version": "0.2.0",
