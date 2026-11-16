@@ -43,7 +43,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   const applier = createApplier({ env: process.env, config, extensionPath: ctx.extensionPath, platform: process.platform });
 
   // 2–3. Xác định hồ sơ và áp dụng NGAY, trước mọi await, để biến môi trường có trước khi Claude Code khởi tiến trình.
-  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+  const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
   const app = new App(home, profiles, bindings, applier, item, config);
   void applier.apply(app.resolution.profile);
 
