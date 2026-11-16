@@ -2,6 +2,8 @@
 
 > Điền từng mục sau khi làm. Ô `…` là chỗ cần điền. Script nằm trong `spike/`, chạy bằng `pwsh` (PowerShell 7).
 >
+> **16/11:** thư mục `spike/` (script thử và extension thử) đã được gỡ khỏi repo; xem lại ở commit `4f562a7`. Hồ sơ thử `~/.claude-profiles/spike` cũng đã được xoá (gỡ junction trước, lịch sử giữ nguyên 759 file).
+>
 > Các mục ghi "Phân tích mã" lấy từ `extension.js` của Claude Code 2.1.323 (`%USERPROFILE%\.vscode\extensions\anthropic.claude-code-2.1.323-win32-x64`). Mã đã bị nén nên tên hàm như `mo`, `Jne` có thể đổi ở bản sau.
 
 ## Step 1: Phiên bản
