@@ -2,7 +2,7 @@
   "name": "claude-multi-account",
   "displayName": "Claude Accounts",
   "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "kuon",
   "private": true,
   "license": "MIT",

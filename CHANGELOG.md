@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/kuon-bui/claude-mutil/compare/v0.2.0...v0.2.1) (2026-11-16)
+
+
+### Bug Fixes
+
+* rename extension to claude-multi-account for the Marketplace ([0bcb641](https://github.com/kuon-bui/claude-mutil/commit/0bcb641489fd384d262ecc4fd2a411cab8fd1fed))
+
 ## [0.2.0](https://github.com/kuon-bui/claude-mutil/compare/v0.1.0...v0.2.0) (2026-11-16)
 
 
