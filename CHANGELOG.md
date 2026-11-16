@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/kuon-bui/claude-mutil/compare/v0.4.0...v0.4.1) (2026-11-16)
+
+
+### Miscellaneous
+
+* release 0.4.1 ([#9](https://github.com/kuon-bui/claude-mutil/issues/9)) ([e214c29](https://github.com/kuon-bui/claude-mutil/commit/e214c294841b533cd4793726208a50eb9bb94b66))
+
 ## [0.4.0](https://github.com/kuon-bui/claude-mutil/compare/v0.3.0...v0.4.0) (2026-11-16)
 
 
