@@ -97,7 +97,8 @@ Với `processEnv`: cửa sổ dùng hồ sơ spike mở bằng `2-open-vscode-p
 Đã làm bằng cửa sổ Extension Development Host (xem Step 3), không cần VS Code thứ hai.
 
 - Hai cửa sổ chạy cùng lúc, mỗi cửa sổ một tài khoản (Pro và Team), không bên nào bị đăng xuất hay đè lên bên kia: **đạt.** Sau khi dùng cả hai, `claude auth status` vẫn cho hồ sơ spike `loggedIn: true, pro` và hồ sơ mặc định `loggedIn: true, team`.
-- Sau khi khởi động lại máy: **chưa kiểm được.** Lần khởi động gần nhất là 07:29 ngày 13/11, trước lúc đăng nhập hồ sơ spike (14:43). Trên Windows, đăng nhập nằm trong file `.credentials.json` của từng thư mục cấu hình nên ít rủi ro mất sau khi khởi động lại. Vẫn phải kiểm ở Task 10 Step 3.8.
+- Sau khi khởi động lại máy: **đạt** (kiểm ngày 16/11). Máy khởi động lại lúc 07:24 ngày 16/11; `claude auth status` sau đó vẫn cho hồ sơ spike `loggedIn: true, pro` và hồ sơ mặc định `loggedIn: true, team`.
+- Ghi chú: sau khi khởi động lại, `~/.claude/projects` giảm từ 811 xuống 758 file. Nguyên nhân là bước dọn dẹp tự động của Claude Code (`.last-cleanup` lúc 07:32 ngày 16/11): không còn hội thoại `.jsonl` nào cũ hơn 30 ngày, các file cũ còn lại chỉ là `.md`. Bước này không liên quan tới extension, nhưng phải tính đến khi đếm file ở bước 7 của `docs/verification.md`: đếm ngay trước và ngay sau khi xoá, không đếm cách nhau qua một lần khởi động lại.
 
 ## Step 7: Lịch sử dùng chung
 
