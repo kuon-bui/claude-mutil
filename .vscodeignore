@@ -16,3 +16,4 @@ package-lock.json
 release-please-config.json
 .release-please-manifest.json
 *.vsix
+images/*.svg

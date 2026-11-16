@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E5906F"/>
+      <stop offset="1" stop-color="#B9532F"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="56" fill="url(#bg)"/>
+  <!-- back profile -->
+  <g fill="#FFFFFF" fill-opacity="0.5">
+    <circle cx="96" cy="84" r="30"/>
+    <path d="M46 170 A50 50 0 0 1 146 170 Z"/>
+  </g>
+  <!-- front profile -->
+  <g fill="#FFFFFF">
+    <circle cx="142" cy="112" r="34"/>
+    <path d="M84 210 A58 58 0 0 1 200 210 Z"/>
+  </g>
+  <!-- spark -->
+  <path d="M200.0 49.0 L200.0 22.0 M205.3 50.7 L221.2 28.9 M208.6 55.2 L234.2 46.9 M208.6 60.8 L234.2 69.1 M205.3 65.3 L221.2 87.1 M200.0 67.0 L200.0 94.0 M194.7 65.3 L178.8 87.1 M191.4 60.8 L165.8 69.1 M191.4 55.2 L165.8 46.9 M194.7 50.7 L178.8 28.9 " fill="none" stroke="#FFF4EC" stroke-width="10" stroke-linecap="round"/>
+  <!-- switch badge -->
+  <circle cx="196" cy="196" r="40" fill="#2B1B15" stroke="#BE5733" stroke-width="8"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M176 184 H214 M204 174 L214 184 L204 194"/>
+    <path d="M216 208 H178 M188 198 L178 208 L188 218"/>
+  </g>
+</svg>
