@@ -2,7 +2,7 @@
 
 Extension VS Code giữ sẵn đăng nhập của nhiều tài khoản Claude Code. Mỗi dự án nhớ tài khoản của nó; đổi tài khoản bằng một cú bấm trên thanh trạng thái. Extension không bao giờ đọc, chép hay gửi token.
 
-> **Bản 0.1.0 chưa được kiểm bằng tay.** Logic có test tự động và cơ chế đổi tài khoản đã được thử trên Windows 11, nhưng chưa ai chạy hết các bước trong `docs/verification.md` với extension đã cài, và chưa thử trên macOS hay Linux. Nếu gặp lỗi, hãy báo kèm hệ điều hành và phiên bản Claude Code.
+> **Bản 0.1.0 mới được kiểm bằng tay trên Windows 11.** Đã kiểm: cài đặt, thêm tài khoản, mỗi cửa sổ một tài khoản, hỏi một lần với dự án mới, dùng chung lịch sử, cảnh báo khi thiếu hồ sơ. Chưa kiểm bằng tay: xoá hồ sơ qua "Quản lý hồ sơ" và giữ đăng nhập sau khi khởi động lại máy; chưa thử trên macOS hay Linux. Nếu gặp lỗi, hãy báo kèm hệ điều hành và phiên bản Claude Code.
 
 ## Cài đặt
 
