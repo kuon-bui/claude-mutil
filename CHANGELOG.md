@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/kuon-bui/claude-mutil/compare/v0.3.0...v0.4.0) (2026-11-16)
+
+
+### Features
+
+* show plan quota in the status bar tooltip ([#6](https://github.com/kuon-bui/claude-mutil/issues/6)) ([065ac49](https://github.com/kuon-bui/claude-mutil/commit/065ac496039f31bdb58b491c3acf702032af2497))
+
 ## [0.3.0](https://github.com/kuon-bui/claude-mutil/compare/v0.2.2...v0.3.0) (2026-11-16)
 
 
