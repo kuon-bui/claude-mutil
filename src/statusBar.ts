@@ -11,18 +11,18 @@ export function statusView(res: Resolution, email: string | undefined, perWindow
   const { profile, reason } = res;
   if (override !== undefined) {
     return {
-      text: '$(warning) Claude: thiết lập đang ép thư mục cấu hình',
-      tooltip: `claudeCode.environmentVariables đặt CLAUDE_CONFIG_DIR = ${override}; Claude Accounts không đổi được tài khoản.`,
+      text: '$(warning) Claude: a setting is forcing the config folder',
+      tooltip: `claudeCode.environmentVariables sets CLAUDE_CONFIG_DIR = ${override}; Claude Accounts cannot switch accounts.`,
       color: profile.color,
       warning: true,
     };
   }
   let text = `$(account) Claude: ${profile.name}`;
-  if (reason === 'unbound') text += ' (chưa chọn)';
-  if (reason === 'missing-profile') text = `$(warning) Claude: thiếu hồ sơ, đang dùng ${profile.name}`;
+  if (reason === 'unbound') text += ' (not chosen)';
+  if (reason === 'missing-profile') text = `$(warning) Claude: profile missing, using ${profile.name}`;
 
-  let tooltip = email ?? 'Chưa đăng nhập';
-  if (!perWindow) tooltip += ' · áp dụng cho mọi cửa sổ';
+  let tooltip = email ?? 'Not signed in';
+  if (!perWindow) tooltip += ' · applies to all windows';
 
   const warning = email === undefined || reason === 'unbound' || reason === 'missing-profile';
   return { text, tooltip, color: profile.color, warning };

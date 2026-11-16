@@ -23,7 +23,7 @@ test('chuẩn bị thư mục lỗi thì gỡ hồ sơ khỏi kho, dọn thư m�
     removeDir: async (dir: string) => { removed.push(dir); },
   };
   await expect(createProfile('Công ty A', deps)).rejects.toThrow('EPERM: junction');
-  expect(profiles.list().map((p) => p.name)).toEqual(['Mặc định']);
+  expect(profiles.list().map((p) => p.name)).toEqual(['Default']);
   expect(removed).toHaveLength(1);
   expect(removed[0].startsWith(root)).toBe(true);
 });

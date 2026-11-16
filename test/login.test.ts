@@ -3,7 +3,7 @@ import { LOGIN_ARGS, POLL_MS, resolveCli, runLogin, TIMEOUT_MS, type LoginDeps }
 import type { Profile } from '../src/profileStore';
 
 const profile: Profile = { id: 'x1', name: 'Công ty A', color: 'charts.green', configDir: 'C:\\Users\\Nguyễn Văn A\\.claude-profiles\\x1', isDefault: false };
-const defaultProfile: Profile = { id: 'default', name: 'Mặc định', color: 'charts.blue', configDir: 'C:\\Users\\a\\.claude', isDefault: true };
+const defaultProfile: Profile = { id: 'default', name: 'Default', color: 'charts.blue', configDir: 'C:\\Users\\a\\.claude', isDefault: true };
 const CLI = 'C:\\ext\\resources\\native-binary\\claude.exe';
 
 /**
@@ -35,7 +35,7 @@ function fakeDeps(opts: { cli?: string; emails: (string | undefined)[]; exitAt?:
 test('mở terminal chạy lệnh đăng nhập với CLAUDE_CONFIG_DIR của hồ sơ', async () => {
   const { deps, calls } = fakeDeps({ cli: CLI, emails: [undefined, 'a@x.com'] });
   await runLogin(profile, deps);
-  expect(calls.opened).toEqual([['Claude: đăng nhập Công ty A', { CLAUDE_CONFIG_DIR: profile.configDir }, CLI, ['auth', 'login']]]);
+  expect(calls.opened).toEqual([['Claude sign-in: Công ty A', { CLAUDE_CONFIG_DIR: profile.configDir }, CLI, ['auth', 'login']]]);
   expect(LOGIN_ARGS).toEqual(['auth', 'login']);
 });
 

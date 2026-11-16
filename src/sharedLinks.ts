@@ -132,16 +132,16 @@ export async function unlinkShared(profileDir: string): Promise<void> {
 export async function removeProfileDir(profileDir: string, root: string): Promise<void> {
   const rel = path.relative(path.resolve(root), path.resolve(profileDir));
   if (!rel || rel === '..' || rel.startsWith(`..${path.sep}`) || path.isAbsolute(rel)) {
-    throw new Error(`Từ chối xoá ${profileDir}: không nằm trong ${root}.`);
+    throw new Error(`Refusing to delete ${profileDir}: it is not inside ${root}.`);
   }
   const st = await lstatOrUndefined(profileDir);
   if (!st) return;
-  if (st.isSymbolicLink()) throw new Error(`Từ chối xoá ${profileDir}: bản thân nó là liên kết.`);
+  if (st.isSymbolicLink()) throw new Error(`Refusing to delete ${profileDir}: it is itself a link.`);
 
   await unlinkShared(profileDir);
   for (const name of SHARED_DIRS) {
     if ((await lstatOrUndefined(path.join(profileDir, name)))?.isSymbolicLink()) {
-      throw new Error(`Từ chối xoá ${profileDir}: không gỡ được liên kết ${name}.`);
+      throw new Error(`Refusing to delete ${profileDir}: could not remove link ${name}.`);
     }
   }
   await removeTreeNoFollow(profileDir);

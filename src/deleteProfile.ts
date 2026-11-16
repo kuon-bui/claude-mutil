@@ -9,9 +9,9 @@ export async function deleteProfile(id: string, deps: {
   profiles: ProfileStore; bindings: BindingStore; root: string;
   removeDir: (dir: string, root: string) => Promise<void>;
 }): Promise<void> {
-  if (id === DEFAULT_PROFILE_ID) throw new Error('Không xoá được hồ sơ Mặc định.');
+  if (id === DEFAULT_PROFILE_ID) throw new Error('Cannot delete the Default profile.');
   const profile = deps.profiles.get(id);
-  if (!profile) throw new Error(`Không có hồ sơ ${id}.`);
+  if (!profile) throw new Error(`Profile ${id} does not exist.`);
   await deps.removeDir(profile.configDir, deps.root);
   await deps.bindings.removeProfile(id);
   await deps.profiles.remove(id);

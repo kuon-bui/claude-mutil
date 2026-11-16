@@ -12,7 +12,7 @@ export function switchItems(
   return profiles.map((profile, i) => {
     const missing = !profile.isDefault && !dirExists(profile.configDir);
     const mark = profile.id === activeId ? '$(check) ' : missing ? '$(warning) ' : '';
-    const description = missing ? 'Mất thư mục hồ sơ: chọn để tạo lại, rồi đăng nhập lại' : emails[i] ?? 'Chưa đăng nhập';
+    const description = missing ? 'Profile folder missing: select to recreate it, then sign in again' : emails[i] ?? 'Not signed in';
     return { label: `${mark}${profile.name}`, description, profile };
   });
 }

@@ -6,7 +6,7 @@ import { memoryStore } from './helpers/memoryStore';
 
 test('kho rỗng vẫn có hồ sơ Mặc định trỏ vào ~/.claude', () => {
   const s = new ProfileStore(memoryStore(), '/home/a');
-  expect(s.list()).toEqual([{ id: 'default', name: 'Mặc định', color: 'charts.blue',
+  expect(s.list()).toEqual([{ id: 'default', name: 'Default', color: 'charts.blue',
     configDir: path.join('/home/a', '.claude'), isDefault: true }]);
 });
 
@@ -41,7 +41,7 @@ test('list giữ Mặc định đầu tiên, các hồ sơ khác theo thứ tự
   const s = new ProfileStore(memoryStore(), '/home/a');
   await s.add('Khách B');
   await s.add('Công ty A');
-  expect(s.list().map((p) => p.name)).toEqual(['Mặc định', 'Khách B', 'Công ty A']);
+  expect(s.list().map((p) => p.name)).toEqual(['Default', 'Khách B', 'Công ty A']);
 });
 
 test('add lưu tên đã bỏ khoảng trắng đầu cuối', async () => {
@@ -53,7 +53,7 @@ test('tên trùng (không phân biệt hoa thường, bỏ khoảng trắng đ�
   const s = new ProfileStore(memoryStore(), '/home/a');
   await s.add('Công ty A');
   await expect(s.add('  công ty a ')).rejects.toBeInstanceOf(DuplicateNameError);
-  await expect(s.add('mặc định')).rejects.toBeInstanceOf(DuplicateNameError);
+  await expect(s.add('default')).rejects.toBeInstanceOf(DuplicateNameError);
 });
 
 test('tên rỗng bị từ chối', async () => {

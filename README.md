@@ -1,49 +1,49 @@
 # Claude Accounts
 
-Extension VS Code giữ sẵn đăng nhập của nhiều tài khoản Claude Code. Mỗi dự án nhớ tài khoản của nó; đổi tài khoản bằng một cú bấm trên thanh trạng thái. Extension không bao giờ đọc, chép hay gửi token.
+A VS Code extension that keeps several Claude Code accounts signed in at once. Each project remembers its own account, and you switch accounts with one click on the status bar. The extension never reads, copies, or sends tokens.
 
-> **Bản 0.1.0 mới được kiểm bằng tay trên Windows 11.** Đã kiểm: cài đặt, thêm tài khoản, mỗi cửa sổ một tài khoản, hỏi một lần với dự án mới, dùng chung lịch sử, cảnh báo khi thiếu hồ sơ. Chưa kiểm bằng tay: xoá hồ sơ qua "Quản lý hồ sơ" và giữ đăng nhập sau khi khởi động lại máy; chưa thử trên macOS hay Linux. Nếu gặp lỗi, hãy báo kèm hệ điều hành và phiên bản Claude Code.
+> **Version 0.1.0 has only been checked by hand on Windows 11.** Checked: installing, adding an account, one account per window, asking once for a new project, shared history, and the warning when a profile is missing. Not yet checked by hand: deleting a profile through "Manage Profiles" and staying signed in after a reboot. Not yet tried on macOS or Linux. If you hit a bug, please report it with your OS and Claude Code version.
 
-## Cài đặt
+## Installation
 
-1. Cần extension **Claude Code** (`anthropic.claude-code`) bản 2.1.323 trở lên.
-2. Trong VS Code: **Extensions** → `…` → **Install from VSIX…** → chọn `claude-account-switcher-0.1.0.vsix`.
-   Hoặc trong terminal: `code --install-extension claude-account-switcher-0.1.0.vsix`.
-3. Tải lại cửa sổ. Thanh trạng thái (góc trái) hiện **Claude: Mặc định**, chính là tài khoản bạn đang đăng nhập sẵn.
+1. You need the **Claude Code** extension (`anthropic.claude-code`), version 2.1.323 or later.
+2. In VS Code: **Extensions** → `…` → **Install from VSIX…** → pick `claude-account-switcher-0.1.0.vsix`.
+   Or from a terminal: `code --install-extension claude-account-switcher-0.1.0.vsix`.
+3. Reload the window. The status bar (bottom left) shows **Claude: Default**, which is the account you are already signed in with.
 
-## Lệnh
+## Commands
 
-| Lệnh | Làm gì |
+| Command | What it does |
 |---|---|
-| **Claude Accounts: Đổi tài khoản** (hoặc bấm vào thanh trạng thái) | Chọn tài khoản cho dự án đang mở. Lựa chọn được nhớ theo thư mục. |
-| **Claude Accounts: Thêm tài khoản** | Đặt tên, rồi đăng nhập trong terminal vừa mở (trình duyệt sẽ mở trang đăng nhập). |
-| **Claude Accounts: Quản lý hồ sơ** | Đổi tên, đăng nhập lại, hoặc xoá một hồ sơ. |
+| **Claude Accounts: Switch Account** (or click the status bar) | Pick the account for the open project. The choice is remembered per folder. |
+| **Claude Accounts: Add Account** | Give it a name, then sign in from the terminal that opens (your browser opens the sign-in page). |
+| **Claude Accounts: Manage Profiles** | Rename, sign in again, or delete a profile. |
 
-Đổi tài khoản xong, extension đề nghị **tải lại cửa sổ**: Claude Code chỉ nhận tài khoản mới khi khởi động lại.
+After you switch accounts, the extension offers to **reload the window**. Claude Code only picks up the new account when it restarts.
 
-Mở một dự án chưa chọn tài khoản, extension hỏi một lần. Bỏ qua thì dự án dùng **Mặc định** và thanh trạng thái ghi "(chưa chọn)".
+When you open a project that has no account yet, the extension asks once. If you skip it, the project uses **Default** and the status bar shows "(not chosen)".
 
-## Hoạt động thế nào
+## How it works
 
-- Hồ sơ **Mặc định** là `~/.claude` hiện có. Mỗi hồ sơ khác là một thư mục `~/.claude-profiles/<id>`.
-- Mỗi cửa sổ VS Code đặt `CLAUDE_CONFIG_DIR` cho Claude Code của riêng nó, nên hai cửa sổ có thể chạy hai tài khoản cùng lúc.
-- Cặp dự án–tài khoản lưu trong bộ nhớ của extension, không ghi vào `.vscode/settings.json` của dự án.
+- The **Default** profile is your existing `~/.claude`. Every other profile is a folder `~/.claude-profiles/<id>`.
+- Each VS Code window sets `CLAUDE_CONFIG_DIR` for its own Claude Code, so two windows can run two accounts at the same time.
+- Project-to-account pairs are stored in the extension's own storage, not in the project's `.vscode/settings.json`.
 
-### Dùng chung và tách riêng
+### Shared vs. separate
 
-| Phần | Giữa các hồ sơ |
+| Part | Across profiles |
 |---|---|
-| Đăng nhập | **Tách riêng** |
-| Lịch sử hội thoại (`projects/`) | Dùng chung: tài khoản này mở tiếp được hội thoại của tài khoản kia |
-| `skills/`, `plugins/`, `commands/` | Dùng chung |
-| `settings.json`, `CLAUDE.md` | **Chép** từ `~/.claude` lúc tạo hồ sơ, sau đó mỗi hồ sơ một bản |
+| Sign-in | **Separate** |
+| Conversation history (`projects/`) | Shared: one account can resume another account's conversations |
+| `skills/`, `plugins/`, `commands/` | Shared |
+| `settings.json`, `CLAUDE.md` | **Copied** from `~/.claude` when the profile is created, then each profile keeps its own copy |
 
-`settings.json` và `CLAUDE.md` không dùng chung được bằng liên kết: Claude Code lưu chúng bằng cách thay file, làm gãy liên kết. Vì vậy thiết lập (kể cả model, plugin nào đang bật) và `CLAUDE.md` đổi ở hồ sơ nào thì chỉ hồ sơ đó nhận.
+`settings.json` and `CLAUDE.md` can't be shared through links: Claude Code saves them by replacing the file, which breaks the link. So a change to settings (including the model and which plugins are enabled) or to `CLAUDE.md` only applies to the profile where you made it.
 
-## Lưu ý
+## Caveats
 
-- **Thiết lập `claudeCode.environmentVariables`:** nếu bạn đã đặt `CLAUDE_CONFIG_DIR` trong thiết lập này, Claude Code ưu tiên nó và extension không đổi được tài khoản. Extension sẽ cảnh báo; hãy xoá `CLAUDE_CONFIG_DIR` khỏi thiết lập đó.
-- **Claude Console (khoá API):** tài khoản dùng khoá API đặt qua biến môi trường (`ANTHROPIC_API_KEY`) không tách được theo thư mục; extension chỉ tách các đăng nhập lưu trong thư mục cấu hình.
-- **Xoá hồ sơ** chỉ xoá thư mục `~/.claude-profiles/<id>` (gồm đăng nhập của hồ sơ đó); lịch sử hội thoại và các thư mục dùng chung được giữ lại. Trên macOS, mục đăng nhập trong Keychain không bị xoá; hãy đăng xuất trong Claude trước nếu muốn gỡ hẳn.
-- **Remote / WSL:** extension chạy cùng máy với Claude Code; hồ sơ nằm trong thư mục home của máy đó.
-- Trên Windows, các thư mục dùng chung là junction (không cần quyền admin).
+- **The `claudeCode.environmentVariables` setting:** if you set `CLAUDE_CONFIG_DIR` there, Claude Code gives it priority and the extension can't switch accounts. The extension warns you about this; remove `CLAUDE_CONFIG_DIR` from that setting.
+- **Claude Console (API keys):** accounts that use an API key set through an environment variable (`ANTHROPIC_API_KEY`) can't be separated per folder. The extension only separates sign-ins stored in the config folder.
+- **Deleting a profile** only removes the `~/.claude-profiles/<id>` folder (including that profile's sign-in). Conversation history and the shared folders are kept. On macOS, the sign-in entry in Keychain is not removed; sign out inside Claude first if you want it gone completely.
+- **Remote / WSL:** the extension runs on the same machine as Claude Code, and profiles live in that machine's home folder.
+- On Windows, the shared folders are junctions (no admin rights needed).

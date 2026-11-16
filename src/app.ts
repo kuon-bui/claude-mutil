@@ -51,7 +51,7 @@ export class App {
     const notShared = await prepareProfileDir(profile, defaultDir, process.platform);
     if (notShared.length > 0) {
       void vscode.window.showWarningMessage(
-        `Hồ sơ ${profile.name} không dùng chung được: ${notShared.join(', ')} (đã có sẵn dạng thư mục thật trong ${profile.configDir}). Lịch sử hội thoại của hồ sơ này đang tách riêng.`);
+        `Profile ${profile.name} could not share: ${notShared.join(', ')} (already exists as a real folder in ${profile.configDir}). This profile's conversation history is kept separate.`);
     }
   }
 
@@ -68,9 +68,9 @@ export class App {
     if (lost) await this.applier.apply(next.profile);
     await this.render();
     if (lost) {
-      const reload = 'Tải lại';
+      const reload = 'Reload';
       const choice = await vscode.window.showWarningMessage(
-        `Hồ sơ ${lostName} không còn; cửa sổ này chuyển về ${next.profile.name}. Tải lại cửa sổ để Claude dùng ${next.profile.name}?`, reload);
+        `Profile ${lostName} no longer exists; this window switched to ${next.profile.name}. Reload the window so Claude uses ${next.profile.name}?`, reload);
       if (choice === reload) await vscode.commands.executeCommand('workbench.action.reloadWindow');
     }
   }
@@ -93,13 +93,13 @@ export class App {
       await this.offerReload(profile);
     } else {
       void vscode.window.showInformationMessage(
-        `Cửa sổ này dùng ${profile.name} cho các cuộc trò chuyện Claude mới. Chưa mở thư mục nên lựa chọn không được lưu: tải lại cửa sổ sẽ quay về ${this.profiles.get(DEFAULT_PROFILE_ID)!.name}.`);
+        `This window uses ${profile.name} for new Claude conversations. No folder is open, so the choice is not saved: reloading the window goes back to ${this.profiles.get(DEFAULT_PROFILE_ID)!.name}.`);
     }
   }
 
   async offerReload(profile: Profile): Promise<void> {
-    const reload = 'Tải lại';
-    const choice = await vscode.window.showInformationMessage(`Tải lại cửa sổ để Claude dùng tài khoản ${profile.name}?`, reload);
+    const reload = 'Reload';
+    const choice = await vscode.window.showInformationMessage(`Reload the window so Claude uses the ${profile.name} account?`, reload);
     if (choice === reload) await vscode.commands.executeCommand('workbench.action.reloadWindow');
   }
 }

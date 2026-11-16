@@ -52,7 +52,7 @@ export function vscodeLoginDeps(app: App, profile: Profile): LoginDeps {
 export async function loginWithProgress(app: App, profile: Profile): Promise<LoginResult> {
   await app.prepare(profile);
   return vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: `Đang chờ đăng nhập ${profile.name} trong terminal…` },
+    { location: vscode.ProgressLocation.Notification, title: `Waiting for ${profile.name} to sign in from the terminal…` },
     () => runLogin(profile, vscodeLoginDeps(app, profile)),
   );
 }
@@ -61,25 +61,25 @@ export async function reportLogin(app: App, profile: Profile, result: LoginResul
   switch (result) {
     case 'signed-in': {
       const email = await readAccountEmail(profile, app.home);
-      const use = app.folders().length > 0 ? 'Dùng cho dự án này' : 'Dùng cho cửa sổ này';
+      const use = app.folders().length > 0 ? 'Use for This Project' : 'Use for This Window';
       await app.render();
       if (app.resolution.profile.id === profile.id) {
-        void vscode.window.showInformationMessage(`Đã đăng nhập ${email ?? profile.name}.`);
+        void vscode.window.showInformationMessage(`Signed in as ${email ?? profile.name}.`);
         return;
       }
-      const choice = await vscode.window.showInformationMessage(`Đã đăng nhập ${email ?? profile.name}.`, use);
+      const choice = await vscode.window.showInformationMessage(`Signed in as ${email ?? profile.name}.`, use);
       if (choice === use) await app.selectProfile(profile);
       return;
     }
     case 'timeout':
-      void vscode.window.showWarningMessage('Chưa thấy đăng nhập; hồ sơ vẫn được giữ, bạn có thể đăng nhập lại từ Quản lý hồ sơ.');
+      void vscode.window.showWarningMessage('No sign-in detected yet. The profile was kept; you can sign in again from Manage Profiles.');
       return;
     case 'failed':
-      void vscode.window.showWarningMessage('Đăng nhập chưa thành công (xem terminal); hồ sơ vẫn được giữ, bạn có thể đăng nhập lại từ Quản lý hồ sơ.');
+      void vscode.window.showWarningMessage('Sign-in did not succeed (see the terminal). The profile was kept; you can sign in again from Manage Profiles.');
       return;
     case 'no-cli':
       void vscode.window.showInformationMessage(
-        `Không tìm thấy lệnh claude. Cửa sổ này sẽ chuyển sang ${profile.name}; hãy đăng nhập trong khung Claude.`);
+        `Could not find the claude command. This window will switch to ${profile.name}; sign in from the Claude panel.`);
       await app.selectProfile(profile);
       return;
   }
@@ -88,8 +88,8 @@ export async function reportLogin(app: App, profile: Profile, result: LoginResul
 export async function runAddAccount(app: App): Promise<void> {
   // 1. Hỏi tên, cùng quy tắc với ProfileStore.add.
   const name = await vscode.window.showInputBox({
-    title: 'Thêm tài khoản Claude',
-    prompt: 'Tên tài khoản, ví dụ: Công ty A',
+    title: 'Add Claude Account',
+    prompt: 'Account name, e.g. Work',
     validateInput: (value) => {
       try {
         app.profiles.validateName(value);
@@ -108,7 +108,7 @@ export async function runAddAccount(app: App): Promise<void> {
       profiles: app.profiles, root: profilesRoot(app.home), prepare: (p) => app.prepare(p), removeDir: removeProfileDir,
     });
   } catch (err) {
-    void vscode.window.showErrorMessage(`Không tạo được hồ sơ ${name.trim()}: ${(err as Error).message}`);
+    void vscode.window.showErrorMessage(`Could not create profile ${name.trim()}: ${(err as Error).message}`);
     return;
   }
 

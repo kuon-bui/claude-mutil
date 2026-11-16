@@ -14,12 +14,12 @@ export async function runSwitch(app: App, options: { title?: string } = {}): Pro
   const items: Item[] = [
     ...switchItems(profiles, emails, app.resolution.profile.id, fs.existsSync),
     { label: '', kind: vscode.QuickPickItemKind.Separator },
-    { label: '$(add) Thêm tài khoản…', command: 'claudeAccounts.add' },
-    { label: '$(gear) Quản lý hồ sơ…', command: 'claudeAccounts.manage' },
+    { label: '$(add) Add Account…', command: 'claudeAccounts.add' },
+    { label: '$(gear) Manage Profiles…', command: 'claudeAccounts.manage' },
   ];
   const picked = await vscode.window.showQuickPick(items, {
-    title: options.title ?? 'Đổi tài khoản Claude',
-    placeHolder: 'Chọn tài khoản cho cửa sổ này',
+    title: options.title ?? 'Switch Claude Account',
+    placeHolder: 'Select an account for this window',
   });
   if (!picked) return;
   if (picked.command) await vscode.commands.executeCommand(picked.command);

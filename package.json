@@ -1,7 +1,7 @@
 {
   "name": "claude-account-switcher",
   "displayName": "Claude Accounts",
-  "description": "Giữ sẵn đăng nhập của nhiều tài khoản Claude Code, tự chọn theo dự án, đổi nhanh từ thanh trạng thái.",
+  "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
   "version": "0.1.0",
   "publisher": "claude-accounts-local",
   "private": true,
@@ -21,9 +21,9 @@
   ],
   "contributes": {
     "commands": [
-      { "command": "claudeAccounts.switch", "category": "Claude Accounts", "title": "Đổi tài khoản" },
-      { "command": "claudeAccounts.add", "category": "Claude Accounts", "title": "Thêm tài khoản" },
-      { "command": "claudeAccounts.manage", "category": "Claude Accounts", "title": "Quản lý hồ sơ" }
+      { "command": "claudeAccounts.switch", "category": "Claude Accounts", "title": "Switch Account" },
+      { "command": "claudeAccounts.add", "category": "Claude Accounts", "title": "Add Account" },
+      { "command": "claudeAccounts.manage", "category": "Claude Accounts", "title": "Manage Profiles" }
     ]
   },
   "scripts": {

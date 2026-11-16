@@ -13,15 +13,15 @@ async function pickProfile(app: App): Promise<Profile | undefined> {
   const profiles = app.profiles.list();
   const emails = await Promise.all(profiles.map((p) => readAccountEmail(p, app.home)));
   const picked = await vscode.window.showQuickPick<ProfileItem>(
-    profiles.map((profile, i) => ({ label: profile.name, description: emails[i] ?? 'Chưa đăng nhập', profile })),
-    { title: 'Quản lý hồ sơ Claude', placeHolder: 'Chọn hồ sơ' },
+    profiles.map((profile, i) => ({ label: profile.name, description: emails[i] ?? 'Not signed in', profile })),
+    { title: 'Manage Claude Profiles', placeHolder: 'Select a profile' },
   );
   return picked?.profile;
 }
 
 async function rename(app: App, profile: Profile): Promise<void> {
   const name = await vscode.window.showInputBox({
-    title: `Đổi tên hồ sơ ${profile.name}`,
+    title: `Rename profile ${profile.name}`,
     value: profile.name,
     validateInput: (value) => {
       try {
@@ -43,19 +43,19 @@ async function remove(app: App, profile: Profile): Promise<void> {
   // Chuyển cửa sổ về Mặc định và tải lại trước, rồi mới xoá.
   if (app.resolution.profile.id === profile.id) {
     const fallback = app.profiles.get(DEFAULT_PROFILE_ID)!;
-    const move = `Chuyển về ${fallback.name}`;
+    const move = `Switch to ${fallback.name}`;
     const choice = await vscode.window.showWarningMessage(
-      `Cửa sổ này đang dùng hồ sơ ${profile.name}. Chuyển cửa sổ về ${fallback.name} và tải lại trước, rồi mở lại Quản lý hồ sơ để xoá.`, move);
+      `This window is using profile ${profile.name}. Switch this window to ${fallback.name} and reload first, then open Manage Profiles again to delete it.`, move);
     if (choice === move) await app.selectProfile(fallback);
     return;
   }
 
-  let detail = 'Đăng nhập của hồ sơ này sẽ bị xoá. Lịch sử hội thoại dùng chung được giữ lại.';
+  let detail = 'This profile\'s sign-in will be deleted. Shared conversation history is kept.';
   if (process.platform === 'darwin') {
-    detail += ' Mục đăng nhập trong Keychain không bị xoá; hãy đăng xuất trong Claude trước nếu muốn gỡ hẳn.';
+    detail += ' The sign-in entry in Keychain is not removed; sign out in Claude first if you want it gone completely.';
   }
-  const confirm = 'Xoá';
-  const choice = await vscode.window.showWarningMessage(`Xoá hồ sơ ${profile.name}?`, { modal: true, detail }, confirm);
+  const confirm = 'Delete';
+  const choice = await vscode.window.showWarningMessage(`Delete profile ${profile.name}?`, { modal: true, detail }, confirm);
   if (choice !== confirm) return;
 
   try {
@@ -66,7 +66,7 @@ async function remove(app: App, profile: Profile): Promise<void> {
     // Xoá có thể đã gỡ liên kết trước khi lỗi: nối lại ngay để hồ sơ còn lại không tách lịch sử.
     await app.prepare(profile).catch(() => {});
     void vscode.window.showErrorMessage(
-      `Không xoá được hồ sơ ${profile.name}: ${(err as Error).message}. Nếu Claude đang chạy bằng hồ sơ này, hãy đóng các cửa sổ đó rồi thử lại.`);
+      `Could not delete profile ${profile.name}: ${(err as Error).message}. If Claude is running with this profile, close those windows and try again.`);
     return;
   }
 
@@ -77,9 +77,9 @@ async function remove(app: App, profile: Profile): Promise<void> {
 export async function runManage(app: App): Promise<void> {
   const profile = await pickProfile(app);
   if (!profile) return;
-  const actions = ['Đổi tên', 'Đăng nhập lại', ...(profile.isDefault ? [] : ['Xoá'])];
-  const action = await vscode.window.showQuickPick(actions, { title: `Hồ sơ ${profile.name}`, placeHolder: 'Chọn thao tác' });
-  if (action === 'Đổi tên') await rename(app, profile);
-  else if (action === 'Đăng nhập lại') await reportLogin(app, profile, await loginWithProgress(app, profile));
-  else if (action === 'Xoá') await remove(app, profile);
+  const actions = ['Rename', 'Sign In Again', ...(profile.isDefault ? [] : ['Delete'])];
+  const action = await vscode.window.showQuickPick(actions, { title: `Profile ${profile.name}`, placeHolder: 'Select an action' });
+  if (action === 'Rename') await rename(app, profile);
+  else if (action === 'Sign In Again') await reportLogin(app, profile, await loginWithProgress(app, profile));
+  else if (action === 'Delete') await remove(app, profile);
 }

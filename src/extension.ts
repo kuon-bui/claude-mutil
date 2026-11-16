@@ -23,9 +23,9 @@ function claudeCodeConfig(): ConfigAccess {
 function warnOverride(config: ConfigAccess): void {
   const override = configDirOverride(config, process.platform);
   if (override === undefined) return;
-  const open = 'Mở thiết lập';
+  const open = 'Open Settings';
   void vscode.window.showWarningMessage(
-    `Thiết lập claudeCode.environmentVariables đang đặt CLAUDE_CONFIG_DIR (${override}), nên Claude Accounts không đổi được tài khoản. Hãy xoá CLAUDE_CONFIG_DIR khỏi thiết lập đó.`,
+    `The claudeCode.environmentVariables setting sets CLAUDE_CONFIG_DIR (${override}), so Claude Accounts cannot switch accounts. Remove CLAUDE_CONFIG_DIR from that setting.`,
     open,
   ).then((choice) => {
     if (choice === open) void vscode.commands.executeCommand('workbench.action.openSettings', 'claudeCode.environmentVariables');
@@ -74,14 +74,14 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   const warnedKey = 'claudeAccounts.versionWarned';
   if (!isSupported(installed, MIN_CLAUDE_CODE_VERSION) && ctx.globalState.get(warnedKey) !== (installed ?? 'none')) {
     await ctx.globalState.update(warnedKey, installed ?? 'none');
-    void vscode.window.showWarningMessage(`Claude Accounts cần Claude Code từ bản ${MIN_CLAUDE_CODE_VERSION} trở lên.`);
+    void vscode.window.showWarningMessage(`Claude Accounts requires Claude Code ${MIN_CLAUDE_CODE_VERSION} or later.`);
   }
 
   // 6. Dự án chưa gắn hồ sơ: hỏi đúng một lần.
   const askedKey = 'claudeAccounts.asked';
   if (app.resolution.reason === 'unbound' && !ctx.workspaceState.get(askedKey)) {
     await ctx.workspaceState.update(askedKey, true);
-    void vscode.commands.executeCommand('claudeAccounts.switch', { title: 'Dự án này dùng tài khoản Claude nào?' });
+    void vscode.commands.executeCommand('claudeAccounts.switch', { title: 'Which Claude account should this project use?' });
   }
 }
 

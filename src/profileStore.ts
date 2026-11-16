@@ -5,7 +5,7 @@ import type { KeyValueStore } from './store';
 export const PROFILE_COLORS = ['charts.blue', 'charts.green', 'charts.orange', 'charts.purple', 'charts.red', 'charts.yellow'] as const;
 
 export const DEFAULT_PROFILE_ID = 'default';
-const DEFAULT_PROFILE_NAME = 'Mặc định';
+const DEFAULT_PROFILE_NAME = 'Default';
 const STORAGE_KEY = 'claudeAccounts.profiles';
 
 export interface Profile {
@@ -18,10 +18,10 @@ export interface Profile {
 }
 
 export class DuplicateNameError extends Error {
-  constructor(name: string) { super(`Đã có hồ sơ tên "${name}".`); this.name = 'DuplicateNameError'; }
+  constructor(name: string) { super(`A profile named "${name}" already exists.`); this.name = 'DuplicateNameError'; }
 }
 export class EmptyNameError extends Error {
-  constructor() { super('Tên hồ sơ không được để trống.'); this.name = 'EmptyNameError'; }
+  constructor() { super('Profile name cannot be empty.'); this.name = 'EmptyNameError'; }
 }
 
 interface StoredProfile { id: string; name: string; color: string }
@@ -60,7 +60,7 @@ export class ProfileStore {
   }
 
   async rename(id: string, name: string): Promise<void> {
-    if (!this.get(id)) throw new Error(`Không có hồ sơ ${id}.`);
+    if (!this.get(id)) throw new Error(`Profile ${id} does not exist.`);
     const clean = this.validateName(name, id);
     const state = this.read();
     if (id === DEFAULT_PROFILE_ID) {
@@ -71,7 +71,7 @@ export class ProfileStore {
   }
 
   async remove(id: string): Promise<void> {
-    if (id === DEFAULT_PROFILE_ID) throw new Error('Không xoá được hồ sơ Mặc định.');
+    if (id === DEFAULT_PROFILE_ID) throw new Error('Cannot delete the Default profile.');
     const state = this.read();
     await this.write({ ...state, profiles: state.profiles.filter((p) => p.id !== id) });
   }
