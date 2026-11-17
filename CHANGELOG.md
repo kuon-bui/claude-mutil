@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.0](https://github.com/kuon-bui/claude-mutil/compare/v0.4.1...v0.5.0) (2026-11-17)
+
+
+### Features
+
+* Accounts webview panel replacing QuickPick ([#11](https://github.com/kuon-bui/claude-mutil/issues/11)) ([5e84800](https://github.com/kuon-bui/claude-mutil/commit/5e8480054b83bb2bdd1f4243dcf6d06ee21b8796))
+
+
+### Bug Fixes
+
+* run vitest with an upper-case drive letter on Windows ([#12](https://github.com/kuon-bui/claude-mutil/issues/12)) ([69e6cdc](https://github.com/kuon-bui/claude-mutil/commit/69e6cdc6a526d343d5e6594abc5fe5c05cfb9850))
+
 ## [0.4.1](https://github.com/kuon-bui/claude-mutil/compare/v0.4.0...v0.4.1) (2026-11-16)
 
 

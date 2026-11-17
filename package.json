@@ -2,7 +2,7 @@
   "name": "claude-account-profiles",
   "displayName": "Claude Account Profiles",
   "description": "Keep several Claude Code accounts signed in, pick one per project automatically, and switch quickly from the status bar.",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "publisher": "kuon",
   "icon": "images/icon.png",
   "private": true,
