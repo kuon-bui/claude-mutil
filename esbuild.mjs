@@ -11,3 +11,15 @@ await build({
   sourcemap: true,
   logLevel: 'info',
 });
+
+await build({
+  entryPoints: ['src/webview/index.tsx'],
+  outfile: 'dist/webview.js',
+  bundle: true,
+  platform: 'browser',
+  format: 'iife',
+  target: 'es2022',
+  jsx: 'automatic',
+  sourcemap: true,
+  logLevel: 'info',
+});

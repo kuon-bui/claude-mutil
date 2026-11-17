@@ -16,13 +16,13 @@ A VS Code extension that keeps several Claude Code accounts signed in at once. E
 
 | Command | What it does |
 |---|---|
-| **Claude Accounts: Switch Account** (or click the status bar) | Pick the account for the open project. The choice is remembered per folder. |
-| **Claude Accounts: Add Account** | Give it a name, then sign in from the terminal that opens (your browser opens the sign-in page). |
-| **Claude Accounts: Manage Profiles** | Rename, sign in again, or delete a profile. |
+| **Claude Accounts: Switch Account** (or click the status bar) | Opens the Accounts tab: pick an account, see its type and quota. The choice is remembered per folder. |
+| **Claude Accounts: Add Account** | Opens the Accounts tab, then asks for a name and signs in from the terminal (your browser opens the sign-in page). |
+| **Claude Accounts: Manage Profiles** | Opens the same Accounts tab to rename, sign in again, or delete a profile. |
 
 After you switch accounts, the extension offers to **reload the window**. Claude Code only picks up the new account when it restarts.
 
-When you open a project that has no account yet, the extension asks once. If you skip it, the project uses **Default** and the status bar shows "(not chosen)".
+When you open a project that has no account yet, the extension asks once (the Accounts tab shows “Which Claude account should this project use?”). If you skip it, the project uses **Default** and the status bar shows "(not chosen)".
 
 ## How it works
 

@@ -43,7 +43,7 @@ export function usageTable(usage: AccountUsage, now: number): string {
   const rows = usage.limits.map((l) => {
     let resets = '';
     if (l.resetsAt !== undefined) resets = l.resetsAt > now ? `in ${duration(l.resetsAt - now)}` : 'since last update';
-    return `| ${escapeMarkdown(l.label)} | ${bar(l.percent)} | ${Math.round(l.percent)}% | ${resets} |`;
+    return `| ${escapeMarkdown(l.label)} | ${quotaBar(l.percent)} | ${Math.round(l.percent)}% | ${resets} |`;
   });
   const age = now - usage.fetchedAt;
   const updated = age < 60_000 ? 'Updated just now' : `Updated ${duration(age)} ago`;
@@ -55,13 +55,13 @@ function escapeMarkdown(text: string): string {
   return text.replace(/[\\`*_{}[\]()#+\-!~|<>]/g, '\\$&');
 }
 
-function bar(percent: number): string {
+export function quotaBar(percent: number): string {
   const filled = Math.min(10, Math.max(0, Math.round(percent / 10)));
   return '▰'.repeat(filled) + '▱'.repeat(10 - filled);
 }
 
 /** Khoảng thời gian ngắn gọn: "45m", "1h 10m", "5d 3h". */
-function duration(ms: number): string {
+export function duration(ms: number): string {
   const minutes = Math.max(1, Math.floor(ms / 60_000));
   if (minutes < 60) return `${minutes}m`;
   const hours = Math.floor(minutes / 60);

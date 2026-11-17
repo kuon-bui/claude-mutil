@@ -72,9 +72,11 @@ export async function reportLogin(app: App, profile: Profile, result: LoginResul
       return;
     }
     case 'timeout':
+      await app.render();
       void vscode.window.showWarningMessage('No sign-in detected yet. The profile was kept; you can sign in again from Manage Profiles.');
       return;
     case 'failed':
+      await app.render();
       void vscode.window.showWarningMessage('Sign-in did not succeed (see the terminal). The profile was kept; you can sign in again from Manage Profiles.');
       return;
     case 'no-cli':
@@ -112,6 +114,16 @@ export async function runAddAccount(app: App): Promise<void> {
     return;
   }
 
-  // 3. Đăng nhập.
-  await reportLogin(app, profile, await loginWithProgress(app, profile));
+  // 3. Hiện hồ sơ mới trên tab Accounts rồi đăng nhập.
+  await refreshThenLogin(app, () => loginWithProgress(app, profile), (result) => reportLogin(app, profile, result));
+}
+
+/** Vẽ lại panel trước khi chờ terminal, để hàng hồ sơ mới xuất hiện trong lúc đăng nhập. */
+export async function refreshThenLogin(
+  app: { render(): Promise<void> },
+  login: () => Promise<LoginResult>,
+  report: (result: LoginResult) => Promise<void>,
+): Promise<void> {
+  await app.render();
+  await report(await login());
 }

@@ -1,25 +1,11 @@
 import * as vscode from 'vscode';
-import { readAccountEmail } from './accountInfo';
-import { loginWithProgress, reportLogin } from './addAccount';
 import type { App } from './app';
 import { deleteProfile } from './deleteProfile';
 import { profilesRoot } from './paths';
 import { DEFAULT_PROFILE_ID, type Profile } from './profileStore';
 import { removeProfileDir } from './sharedLinks';
 
-type ProfileItem = vscode.QuickPickItem & { profile: Profile };
-
-async function pickProfile(app: App): Promise<Profile | undefined> {
-  const profiles = app.profiles.list();
-  const emails = await Promise.all(profiles.map((p) => readAccountEmail(p, app.home)));
-  const picked = await vscode.window.showQuickPick<ProfileItem>(
-    profiles.map((profile, i) => ({ label: profile.name, description: emails[i] ?? 'Not signed in', profile })),
-    { title: 'Manage Claude Profiles', placeHolder: 'Select a profile' },
-  );
-  return picked?.profile;
-}
-
-async function rename(app: App, profile: Profile): Promise<void> {
+export async function renameProfile(app: App, profile: Profile): Promise<void> {
   const name = await vscode.window.showInputBox({
     title: `Rename profile ${profile.name}`,
     value: profile.name,
@@ -38,7 +24,7 @@ async function rename(app: App, profile: Profile): Promise<void> {
   await app.render();
 }
 
-async function remove(app: App, profile: Profile): Promise<void> {
+export async function removeProfile(app: App, profile: Profile): Promise<void> {
   // Claude đang chạy bằng hồ sơ này trong cửa sổ này sẽ tiếp tục ghi vào thư mục của nó và tạo lại thư mục sau khi xoá.
   // Chuyển cửa sổ về Mặc định và tải lại trước, rồi mới xoá.
   if (app.resolution.profile.id === profile.id) {
@@ -74,12 +60,3 @@ async function remove(app: App, profile: Profile): Promise<void> {
   await app.render();
 }
 
-export async function runManage(app: App): Promise<void> {
-  const profile = await pickProfile(app);
-  if (!profile) return;
-  const actions = ['Rename', 'Sign In Again', ...(profile.isDefault ? [] : ['Delete'])];
-  const action = await vscode.window.showQuickPick(actions, { title: `Profile ${profile.name}`, placeHolder: 'Select an action' });
-  if (action === 'Rename') await rename(app, profile);
-  else if (action === 'Sign In Again') await reportLogin(app, profile, await loginWithProgress(app, profile));
-  else if (action === 'Delete') await remove(app, profile);
-}
