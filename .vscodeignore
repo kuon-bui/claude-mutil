@@ -9,6 +9,7 @@ node_modules/**
 !CHANGELOG.md
 tsconfig.json
 esbuild.mjs
+scripts/**
 vitest.config.ts
 **/*.map
 .gitignore

@@ -50,7 +50,7 @@
     "vscode:prepublish": "npm run build",
     "build": "node esbuild.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node scripts/test.mjs run",
     "package": "vsce package"
   },
   "devDependencies": {
