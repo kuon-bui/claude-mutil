@@ -51,7 +51,7 @@
     "build:css": "tailwindcss -i src/webview/input.css -o dist/webview.css",
     "build": "node esbuild.mjs && npm run build:css",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node scripts/test.mjs run",
     "package": "vsce package"
   },
   "devDependencies": {
