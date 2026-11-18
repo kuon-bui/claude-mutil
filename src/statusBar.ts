@@ -23,7 +23,7 @@ export function statusView(
       warning: true,
     };
   }
-  let text = `$(account) Claude: ${profile.name}`;
+  let text = `$(${profile.icon}) Claude: ${profile.name}`;
   if (reason === 'unbound') text += ' (not chosen)';
   if (reason === 'missing-profile') text = `$(warning) Claude: profile missing, using ${profile.name}`;
 

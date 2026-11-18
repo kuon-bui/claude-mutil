@@ -13,7 +13,7 @@ beforeEach(async () => {
   home = await fs.mkdtemp(path.join(os.tmpdir(), 'Nguyễn Văn A '));
   dir = path.join(home, '.claude-profiles', 'x1');
   await fs.mkdir(dir, { recursive: true });
-  p = { id: 'x1', name: 'Công ty A', color: 'charts.green', configDir: dir, isDefault: false };
+  p = { id: 'x1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir: dir, isDefault: false };
 });
 afterEach(async () => {
   await fs.rm(home, { recursive: true, force: true });

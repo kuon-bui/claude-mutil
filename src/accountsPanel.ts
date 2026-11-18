@@ -7,7 +7,7 @@ import { accountsState } from './accountsView';
 import { configDirOverride } from './applier';
 import type { App } from './app';
 import { createLatestGate } from './latestGate';
-import { renameProfile, removeProfile } from './manageCommand';
+import { changeAppearance, renameProfile, removeProfile } from './manageCommand';
 import type { Profile } from './profileStore';
 import type { RefreshResult } from './usageRefresh';
 
@@ -28,7 +28,7 @@ export function showAccounts(app: App, ctx: vscode.ExtensionContext): void {
     { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [dist] },
   );
   panel.webview.html = html(panel.webview, dist);
-  panel.webview.onDidReceiveMessage((msg: { type?: string; id?: string }) => { void onMessage(app, msg); });
+  panel.webview.onDidReceiveMessage((msg: Parameters<typeof onMessage>[1]) => { void onMessage(app, msg); });
   panel.onDidDispose(() => { panel = undefined; });
   ctx.subscriptions.push(panel);
   void refreshAccounts(app);
@@ -60,7 +60,7 @@ async function pushState(app: App, target: vscode.WebviewPanel): Promise<void> {
   });
 }
 
-async function onMessage(app: App, msg: { type?: string; id?: string }): Promise<void> {
+async function onMessage(app: App, msg: { type?: string; id?: string; icon?: unknown; color?: unknown }): Promise<void> {
   if (msg.type === 'ready') {
     refreshAccounts(app);
     return;
@@ -79,6 +79,12 @@ async function onMessage(app: App, msg: { type?: string; id?: string }): Promise
   if (profile === undefined) return;
   if (msg.type === 'use') await app.selectProfile(profile);
   else if (msg.type === 'rename') await renameProfile(app, profile);
+  else if (msg.type === 'appearance') {
+    await changeAppearance(app, profile, {
+      ...(typeof msg.icon === 'string' && { icon: msg.icon }),
+      ...(typeof msg.color === 'string' && { color: msg.color }),
+    });
+  }
   else if (msg.type === 'login') await reportLogin(app, profile, await loginWithProgress(app, profile));
   else if (msg.type === 'delete') await removeProfile(app, profile);
   await app.render();
@@ -98,16 +104,19 @@ function html(webview: vscode.Webview, dist: vscode.Uri): string {
   const nonce = randomBytes(16).toString('hex');
   const script = webview.asWebviewUri(vscode.Uri.joinPath(dist, 'webview.js'));
   const style = webview.asWebviewUri(vscode.Uri.joinPath(dist, 'webview.css'));
+  const codicons = webview.asWebviewUri(vscode.Uri.joinPath(dist, 'codicon.css'));
   const csp = [
     "default-src 'none'",
     `script-src 'nonce-${nonce}'`,
     `style-src ${webview.cspSource} 'unsafe-inline'`,
+    `font-src ${webview.cspSource}`,
   ].join('; ');
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="${csp}">
+<link rel="stylesheet" href="${codicons}">
 <link rel="stylesheet" href="${style}">
 </head>
 <body>

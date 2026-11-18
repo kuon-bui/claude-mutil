@@ -1,4 +1,11 @@
+import fs from 'node:fs';
 import { build } from 'esbuild';
+
+// Font codicon cho webview (avatar hồ sơ): codicon.css trỏ tới ./codicon.ttf nên chép cả hai vào dist.
+fs.mkdirSync('dist', { recursive: true });
+for (const file of ['codicon.css', 'codicon.ttf']) {
+  fs.copyFileSync(`node_modules/@vscode/codicons/dist/${file}`, `dist/${file}`);
+}
 
 await build({
   entryPoints: ['src/extension.ts'],

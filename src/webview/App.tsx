@@ -1,4 +1,5 @@
-import type { AccountRow, AccountsState, PanelMessage } from './types';
+import { useState } from 'react';
+import type { AccountRow, AccountsState, ColorOption, PanelMessage } from './types';
 import { vscode } from './vscode';
 
 function send(msg: PanelMessage): void {
@@ -6,6 +7,8 @@ function send(msg: PanelMessage): void {
 }
 
 export function App({ state }: { state: AccountsState | undefined }) {
+  /** Hồ sơ đang mở khung Appearance (mỗi lần một hồ sơ). */
+  const [editing, setEditing] = useState<string | undefined>(undefined);
   if (state === undefined) return <p className="p-4 text-[var(--vscode-descriptionForeground)]">Loading…</p>;
   return (
     <div className="mx-auto max-w-3xl p-4">
@@ -41,7 +44,13 @@ export function App({ state }: { state: AccountsState | undefined }) {
       <ul className="m-0 list-none p-0">
         {state.accounts.map((row) => (
           <li key={row.id} className="mb-3 rounded border border-[var(--vscode-panel-border)] p-3">
-            <AccountCard row={row} useLabel={state.useLabel} />
+            <AccountCard
+              row={row}
+              useLabel={state.useLabel}
+              palette={{ icons: state.icons, colors: state.colors }}
+              editing={editing === row.id}
+              onToggleEditing={() => setEditing((cur) => (cur === row.id ? undefined : row.id))}
+            />
           </li>
         ))}
       </ul>
@@ -49,12 +58,16 @@ export function App({ state }: { state: AccountsState | undefined }) {
   );
 }
 
-function AccountCard({ row, useLabel }: { row: AccountRow; useLabel: string }) {
+interface Palette { icons: string[]; colors: ColorOption[] }
+
+function AccountCard({ row, useLabel, palette, editing, onToggleEditing }: {
+  row: AccountRow; useLabel: string; palette: Palette; editing: boolean; onToggleEditing: () => void;
+}) {
   return (
     <>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span aria-hidden="true">{row.active ? '●' : '○'}</span>
+        <div className="flex items-center gap-3">
+          <Avatar row={row} expanded={editing} onClick={onToggleEditing} />
           <strong>{row.name}</strong>
         </div>
         <span className="text-[var(--vscode-descriptionForeground)]">{row.kind}</span>
@@ -63,6 +76,7 @@ function AccountCard({ row, useLabel }: { row: AccountRow; useLabel: string }) {
         <span>{row.email}</span>
         {row.active && <span>Using in this window</span>}
       </div>
+      {editing && <AppearanceEditor row={row} palette={palette} onDone={onToggleEditing} />}
       {row.missingHint !== undefined && <p className="mt-2 mb-0">{row.missingHint}</p>}
       {row.usage !== undefined && (
         <div className="mt-3">
@@ -85,6 +99,9 @@ function AccountCard({ row, useLabel }: { row: AccountRow; useLabel: string }) {
       <div className="mt-3 flex flex-wrap gap-2">
         {row.actions.use && <Action label={useLabel} onClick={() => send({ type: 'use', id: row.id })} />}
         {row.actions.rename && <Action label="Rename" onClick={() => send({ type: 'rename', id: row.id })} />}
+        {row.actions.appearance && (
+          <Action label={editing ? 'Done' : 'Appearance'} expanded={editing} onClick={onToggleEditing} />
+        )}
         {row.actions.login && <Action label="Sign in again" onClick={() => send({ type: 'login', id: row.id })} />}
         {row.actions.delete && <Action label="Delete" onClick={() => send({ type: 'delete', id: row.id })} />}
       </div>
@@ -92,11 +109,94 @@ function AccountCard({ row, useLabel }: { row: AccountRow; useLabel: string }) {
   );
 }
 
-function Action({ label, onClick }: { label: string; onClick: () => void }) {
+/** Nền avatar/ô icon: màu hồ sơ pha nhạt, đọc được ở cả theme sáng lẫn tối. */
+const tint = (color: string, percent = 18) => `color-mix(in srgb, ${color} ${percent}%, transparent)`;
+
+/**
+ * Avatar tròn: codicon của hồ sơ trên nền màu hồ sơ pha nhạt. Hồ sơ đang dùng có vòng viền đậm. Bấm vào để mở/đóng
+ * khung Appearance.
+ */
+function Avatar({ row, expanded, onClick }: { row: AccountRow; expanded: boolean; onClick: () => void }) {
+  const ring = row.active
+    ? `0 0 0 2px var(--vscode-editor-background), 0 0 0 4px ${row.color}`
+    : `inset 0 0 0 1px ${tint(row.color, 45)}`;
+  return (
+    <button
+      type="button"
+      className="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full border-0 p-0"
+      style={{ color: row.color, background: tint(row.color), boxShadow: ring }}
+      title={row.active ? `${row.name} (in use) · Change icon and color` : `${row.name} · Change icon and color`}
+      aria-label={`Change icon and color for ${row.name}`}
+      aria-expanded={expanded}
+      onClick={onClick}
+    >
+      <i className={`codicon codicon-${row.icon}`} style={{ fontSize: 18 }} aria-hidden="true" />
+    </button>
+  );
+}
+
+/** Chọn màu và icon cùng một chỗ; bấm là áp dụng ngay (avatar và thanh trạng thái đổi theo). Esc để đóng. */
+function AppearanceEditor({ row, palette, onDone }: { row: AccountRow; palette: Palette; onDone: () => void }) {
+  return (
+    <div
+      className="mt-3 rounded border border-[var(--vscode-panel-border)] p-3"
+      role="group"
+      aria-label={`Appearance of ${row.name}`}
+      onKeyDown={(e) => { if (e.key === 'Escape') onDone(); }}
+    >
+      <p className="mt-0 mb-2 text-xs uppercase tracking-wide text-[var(--vscode-descriptionForeground)]">Color</p>
+      <div className="mb-3 flex flex-wrap gap-2" role="radiogroup" aria-label="Color">
+        {palette.colors.map((c) => {
+          const selected = c.id === row.colorId;
+          return (
+            <button
+              key={c.id}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={c.label}
+              title={c.label}
+              className="size-6 cursor-pointer rounded-full border-0 p-0"
+              style={{
+                background: c.css,
+                boxShadow: selected ? `0 0 0 2px var(--vscode-editor-background), 0 0 0 4px ${c.css}` : undefined,
+              }}
+              onClick={() => { if (!selected) send({ type: 'appearance', id: row.id, color: c.id }); }}
+            />
+          );
+        })}
+      </div>
+      <p className="mt-0 mb-2 text-xs uppercase tracking-wide text-[var(--vscode-descriptionForeground)]">Icon</p>
+      <div className="grid grid-cols-[repeat(auto-fill,2rem)] gap-1" role="radiogroup" aria-label="Icon">
+        {palette.icons.map((icon) => {
+          const selected = icon === row.icon;
+          return (
+            <button
+              key={icon}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              aria-label={icon}
+              title={icon}
+              className="flex size-8 cursor-pointer items-center justify-center rounded border-0 bg-transparent p-0 text-[var(--vscode-foreground)] hover:bg-[var(--vscode-toolbar-hoverBackground)]"
+              style={selected ? { color: row.color, background: tint(row.color), boxShadow: `inset 0 0 0 1px ${row.color}` } : undefined}
+              onClick={() => { if (!selected) send({ type: 'appearance', id: row.id, icon }); }}
+            >
+              <i className={`codicon codicon-${icon}`} style={{ fontSize: 16 }} aria-hidden="true" />
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function Action({ label, onClick, expanded }: { label: string; onClick: () => void; expanded?: boolean }) {
   return (
     <button
       type="button"
       className="rounded border border-[var(--vscode-panel-border)] bg-transparent px-2 py-1"
+      aria-expanded={expanded}
       onClick={onClick}
     >
       {label}

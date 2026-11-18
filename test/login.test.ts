@@ -2,8 +2,8 @@ import { expect, test } from 'vitest';
 import { LOGIN_ARGS, POLL_MS, resolveCli, runLogin, TIMEOUT_MS, type LoginDeps } from '../src/login';
 import type { Profile } from '../src/profileStore';
 
-const profile: Profile = { id: 'x1', name: 'Công ty A', color: 'charts.green', configDir: 'C:\\Users\\Nguyễn Văn A\\.claude-profiles\\x1', isDefault: false };
-const defaultProfile: Profile = { id: 'default', name: 'Default', color: 'charts.blue', configDir: 'C:\\Users\\a\\.claude', isDefault: true };
+const profile: Profile = { id: 'x1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir: 'C:\\Users\\Nguyễn Văn A\\.claude-profiles\\x1', isDefault: false };
+const defaultProfile: Profile = { id: 'default', name: 'Default', color: 'charts.blue', icon: 'account', configDir: 'C:\\Users\\a\\.claude', isDefault: true };
 const CLI = 'C:\\ext\\resources\\native-binary\\claude.exe';
 
 /**

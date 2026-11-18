@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import type { App } from './app';
 import { deleteProfile } from './deleteProfile';
 import { profilesRoot } from './paths';
-import { DEFAULT_PROFILE_ID, type Profile } from './profileStore';
+import { type Appearance, DEFAULT_PROFILE_ID, type Profile } from './profileStore';
 import { removeProfileDir } from './sharedLinks';
 
 export async function renameProfile(app: App, profile: Profile): Promise<void> {
@@ -20,6 +20,21 @@ export async function renameProfile(app: App, profile: Profile): Promise<void> {
   });
   if (name === undefined) return;
   await app.profiles.rename(profile.id, name);
+  app.resolution = app.resolve();
+  await app.render();
+}
+
+/**
+ * Đổi icon/màu từ khung Appearance của Accounts panel, rồi vẽ lại thanh trạng thái (và panel). Giá trị lạ (không nằm
+ * trong danh sách) thì bỏ qua: chỉ có thể đến từ webview lỗi, không cần báo người dùng.
+ */
+export async function changeAppearance(app: App, profile: Profile, appearance: Appearance): Promise<void> {
+  if (appearance.icon === undefined && appearance.color === undefined) return;
+  try {
+    await app.profiles.setAppearance(profile.id, appearance);
+  } catch {
+    return;
+  }
   app.resolution = app.resolve();
   await app.render();
 }

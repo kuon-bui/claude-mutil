@@ -19,7 +19,7 @@ import { refreshThenLogin, reportLogin } from '../src/addAccount';
 import type { LoginResult } from '../src/login';
 
 const profile: Profile = {
-  id: 'a1', name: 'Work', color: 'charts.green',
+  id: 'a1', name: 'Work', color: 'charts.green', icon: 'account',
   configDir: '/h/.claude-profiles/a1', isDefault: false,
 };
 

@@ -9,8 +9,8 @@ function fakeConfig(values: Record<string, unknown> = {}): ConfigAccess {
   };
 }
 const deps = (env: NodeJS.ProcessEnv): ApplierDeps => ({ env, config: fakeConfig(), extensionPath: '/ext', platform: 'linux' });
-const profile = (configDir: string): Profile => ({ id: 'x1', name: 'Công ty A', color: 'charts.green', configDir, isDefault: false });
-const defaultProfile: Profile = { id: 'default', name: 'Default', color: 'charts.blue', configDir: '/h/.claude', isDefault: true };
+const profile = (configDir: string): Profile => ({ id: 'x1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir, isDefault: false });
+const defaultProfile: Profile = { id: 'default', name: 'Default', color: 'charts.blue', icon: 'account', configDir: '/h/.claude', isDefault: true };
 
 test('hồ sơ thường đặt CLAUDE_CONFIG_DIR', async () => {
   const env: NodeJS.ProcessEnv = {};
