@@ -50,6 +50,16 @@ export function usageTable(usage: AccountUsage, now: number): string {
   return ['| Quota | | Used | Resets |', '|:--|:--|--:|:--|', ...rows, '', updated].join('\n');
 }
 
+export const REFRESH_QUOTA_COMMAND = 'claudeAccounts.refreshQuota';
+
+/**
+ * Dòng cuối tooltip: VS Code không báo khi rê chuột lên mục thanh trạng thái, nên quota được lấy lại ngầm, và tooltip có
+ * link để lấy ngay. Cần `MarkdownString` cho phép lệnh này và bật `supportThemeIcons`.
+ */
+export function refreshLine(running: boolean): string {
+  return running ? '$(sync~spin) Refreshing quota…' : `[$(refresh) Refresh quota](command:${REFRESH_QUOTA_COMMAND})`;
+}
+
 /** Thoát ký tự Markdown như `MarkdownString.appendText` của VS Code, để email hay đường dẫn hiện đúng nguyên văn. */
 function escapeMarkdown(text: string): string {
   return text.replace(/[\\`*_{}[\]()#+\-!~|<>]/g, '\\$&');

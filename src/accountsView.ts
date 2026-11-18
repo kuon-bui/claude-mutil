@@ -6,6 +6,8 @@ export interface AccountsState {
   prompt?: string;
   override?: string;
   useLabel: string;
+  /** Có hồ sơ đang lấy lại quota: nút Refresh quota tạm khoá. */
+  refreshing: boolean;
   accounts: AccountRow[];
 }
 
@@ -17,6 +19,7 @@ export interface AccountRow {
   active: boolean;
   missing: boolean;
   missingHint?: string;
+  refreshing: boolean;
   usage?: { limits: { label: string; percent: number; bar: string; resets?: string }[]; updated: string };
   actions: { use: boolean; rename: true; login: true; delete: boolean };
 }
@@ -32,20 +35,26 @@ export function accountsState(input: {
   hasFolder: boolean;
   override?: string;
   now?: number;
+  /** Hồ sơ nào đang lấy lại quota. */
+  refreshing?: (id: string) => boolean;
 }): AccountsState {
   const now = input.now ?? Date.now();
   const canUse = input.override === undefined;
+  const refreshing = input.refreshing ?? (() => false);
+  const accounts = input.profiles.map((profile, i) =>
+    row(profile, input.infos[i], input.activeId, input.dirExists, canUse, refreshing(profile.id), now));
   return {
     prompt: input.override === undefined && input.unbound ? 'Which Claude account should this project use?' : undefined,
     override: input.override,
     useLabel: input.hasFolder ? 'Use for This Project' : 'Use for This Window',
-    accounts: input.profiles.map((profile, i) => row(profile, input.infos[i], input.activeId, input.dirExists, canUse, now)),
+    refreshing: accounts.some((a) => a.refreshing),
+    accounts,
   };
 }
 
 function row(
   profile: Profile, info: AccountInfo | undefined, activeId: string,
-  dirExists: (dir: string) => boolean, canUse: boolean, now: number,
+  dirExists: (dir: string) => boolean, canUse: boolean, refreshing: boolean, now: number,
 ): AccountRow {
   const missing = !profile.isDefault && !dirExists(profile.configDir);
   const kind = info?.kind.organization ? `${info.kind.label} · ${info.kind.organization}` : (info?.kind.label ?? 'Unknown');
@@ -57,6 +66,7 @@ function row(
     active: profile.id === activeId,
     missing,
     missingHint: missing ? MISSING_HINT : undefined,
+    refreshing,
     usage: usageView(info?.usage, now),
     actions: { use: canUse, rename: true, login: true, delete: !profile.isDefault },
   };

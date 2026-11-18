@@ -6,7 +6,8 @@ import { configDirOverride, type ConfigAccess, type ProfileApplier } from './app
 import type { BindingStore } from './bindingStore';
 import { DEFAULT_PROFILE_ID, type Profile, type ProfileStore } from './profileStore';
 import { prepareProfileDir } from './sharedLinks';
-import { statusView } from './statusBar';
+import { refreshLine, REFRESH_QUOTA_COMMAND, statusView } from './statusBar';
+import { isStale, type RefreshResult, type UsageRefresher } from './usageRefresh';
 
 /** Trạng thái chung của một cửa sổ: hồ sơ đang dùng, thanh trạng thái, và thao tác chọn hồ sơ. */
 export class App {
@@ -20,8 +21,39 @@ export class App {
     readonly applier: ProfileApplier,
     private readonly item: vscode.StatusBarItem,
     readonly config: ConfigAccess,
+    readonly usage: UsageRefresher,
   ) {
     this.resolution = this.resolve();
+  }
+
+  /**
+   * Lấy lại quota (qua `claude -p /usage`) cho các hồ sơ đã đăng nhập và còn thư mục; vẽ lại khi bắt đầu (hiện
+   * "Refreshing…") và khi xong.
+   */
+  async refreshUsage(profiles: Profile[]): Promise<{ profile: Profile; result: RefreshResult }[]> {
+    const infos = await Promise.all(profiles.map((p) => readAccountInfo(p, this.home)));
+    const targets = profiles.filter((p, i) => infos[i].email !== undefined && (p.isDefault || fs.existsSync(p.configDir)));
+    const work = Promise.all(targets.map(async (profile) => ({ profile, result: await this.usage.refresh(profile) })));
+    await this.render();
+    const results = await work;
+    await this.render();
+    return results;
+  }
+
+  private readonly autoTried = new Map<string, number>();
+
+  /**
+   * Tự lấy lại quota của hồ sơ đang dùng khi bản lưu đã cũ, để tooltip mới khi rê chuột tới (VS Code không báo sự kiện
+   * rê chuột). Mỗi hồ sơ tự thử tối đa một lần mỗi `STALE_MS`, kể cả khi lần trước không ra quota.
+   */
+  async refreshActiveUsageIfStale(now = Date.now()): Promise<void> {
+    const { profile } = this.resolution;
+    const tried = this.autoTried.get(profile.id);
+    if (tried !== undefined && !isStale(tried, now)) return;
+    const { usage } = await readAccountInfo(profile, this.home);
+    if (!isStale(usage?.fetchedAt, now)) return;
+    this.autoTried.set(profile.id, now);
+    await this.refreshUsage([profile]);
   }
 
   /** Thư mục gốc của workspace (chỉ thư mục trên đĩa của máy đang chạy extension). */
@@ -34,10 +66,18 @@ export class App {
   }
 
   async render(): Promise<void> {
-    const { email, usage } = await readAccountInfo(this.resolution.profile, this.home);
-    const view = statusView(this.resolution, email, this.applier.perWindow, configDirOverride(this.config, process.platform), usage);
+    const { profile } = this.resolution;
+    const { email, usage } = await readAccountInfo(profile, this.home);
+    const override = configDirOverride(this.config, process.platform);
+    const view = statusView(this.resolution, email, this.applier.perWindow, override, usage);
+    const tooltip = new vscode.MarkdownString(view.tooltip);
+    if (email !== undefined && override === undefined) {
+      tooltip.appendMarkdown(`\n\n${refreshLine(this.usage.isRefreshing(profile.id))}`);
+      tooltip.supportThemeIcons = true;
+      tooltip.isTrusted = { enabledCommands: [REFRESH_QUOTA_COMMAND] };
+    }
     this.item.text = view.text;
-    this.item.tooltip = new vscode.MarkdownString(view.tooltip);
+    this.item.tooltip = tooltip;
     this.item.color = new vscode.ThemeColor(view.color);
     this.item.backgroundColor = view.warning ? new vscode.ThemeColor('statusBarItem.warningBackground') : undefined;
     this.item.show();

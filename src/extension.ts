@@ -1,12 +1,14 @@
 import os from 'node:os';
 import * as vscode from 'vscode';
-import { runAddAccount } from './addAccount';
-import { refreshAccounts, showAccounts } from './accountsPanel';
+import { findCli, runAddAccount } from './addAccount';
+import { refreshAccounts, reportRefresh, showAccounts } from './accountsPanel';
 import { App } from './app';
 import { configDirOverride, createApplier, type ConfigAccess } from './applier';
 import { BindingStore } from './bindingStore';
 import { ProfileStore } from './profileStore';
+import { REFRESH_QUOTA_COMMAND } from './statusBar';
 import { runManage, runSwitch } from './switchCommand';
+import { createUsageRefresher, runCli } from './usageRefresh';
 import { isSupported } from './versionCheck';
 
 /** Bản Claude Code đã thử trong bản thử Task 1 (docs/spike-results.md). */
@@ -44,7 +46,8 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
 
   // 2–3. Xác định hồ sơ và áp dụng NGAY, trước mọi await, để biến môi trường có trước khi Claude Code khởi tiến trình.
   const item = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-  const app = new App(home, profiles, bindings, applier, item, config);
+  const usage = createUsageRefresher({ findCli, run: runCli(home) });
+  const app = new App(home, profiles, bindings, applier, item, config, usage);
   app.onDidRender = () => refreshAccounts(app);
   void applier.apply(app.resolution.profile);
 
@@ -60,8 +63,15 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
       await app.render();
     }),
     vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app, ctx)),
+    vscode.commands.registerCommand(REFRESH_QUOTA_COMMAND, async () => {
+      reportRefresh(await app.refreshUsage([app.resolution.profile]));
+    }),
     // Hồ sơ có thể bị đổi tên/xoá ở cửa sổ khác, thư mục bị xoá bên ngoài, email đổi: kiểm lại mỗi khi cửa sổ được focus.
-    vscode.window.onDidChangeWindowState((s) => { if (s.focused) void app.refresh(); }),
+    // Quota cũ thì lấy lại luôn, để tooltip mới khi rê chuột tới.
+    vscode.window.onDidChangeWindowState((s) => {
+      if (!s.focused) return;
+      void app.refresh().then(() => app.refreshActiveUsageIfStale());
+    }),
     // Thiết lập đè có thể được thêm hoặc gỡ khi cửa sổ đang mở: vẽ lại và cảnh báo nếu vừa xuất hiện.
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (!e.affectsConfiguration('claudeCode.environmentVariables')) return;
@@ -70,10 +80,14 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
     }),
   );
   // Quota trong tooltip là bản Claude Code lưu vào `.claude.json` và thời gian tương đối ("resets in…"): vẽ lại mỗi phút
-  // để tooltip theo kịp bản lưu mới và không chỉ giờ cũ.
-  const timer = setInterval(() => void app.render(), 60_000);
+  // để tooltip theo kịp bản lưu mới và không chỉ giờ cũ. Cửa sổ đang được focus thì lấy lại quota khi bản lưu đã cũ.
+  const timer = setInterval(() => {
+    void app.render();
+    if (vscode.window.state.focused) void app.refreshActiveUsageIfStale();
+  }, 60_000);
   ctx.subscriptions.push({ dispose: () => clearInterval(timer) });
   await app.render();
+  void app.refreshActiveUsageIfStale();
   // Nối lại phần dùng chung nếu hồ sơ đang dùng bị mất liên kết (ví dụ lần xoá trước thất bại giữa chừng).
   if (app.resolution.reason === 'bound') void app.prepare(app.resolution.profile);
   warnOverride(config);

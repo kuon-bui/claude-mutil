@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import type { Reason } from '../src/activeProfile';
 import type { Profile } from '../src/profileStore';
-import { statusView } from '../src/statusBar';
+import { refreshLine, statusView } from '../src/statusBar';
 
 const p = (name: string, color: string, isDefault = false): Profile =>
   ({ id: isDefault ? 'default' : 'x1', name, color, configDir: '/c', isDefault });
@@ -91,4 +91,9 @@ test('quota vừa cập nhật; thiết lập đè thì tooltip không kèm quot
 test('tooltip là Markdown: thoát ký tự đặc biệt trong email và đường dẫn', () => {
   expect(statusView(res(def, 'bound'), 'a_b-c@x.com', true).tooltip).toBe('a\\_b\\-c@x.com');
   expect(statusView(res(def, 'bound'), 'a@x.com', true, 'D:\\my_dir').tooltip).toContain('D:\\\\my\\_dir');
+});
+
+test('dòng lấy lại quota: link lệnh, hoặc báo đang lấy', () => {
+  expect(refreshLine(false)).toBe('[$(refresh) Refresh quota](command:claudeAccounts.refreshQuota)');
+  expect(refreshLine(true)).toBe('$(sync~spin) Refreshing quota…');
 });
