@@ -2,8 +2,8 @@ import { expect, test } from 'vitest';
 import type { Profile } from '../src/profileStore';
 import { createUsageRefresher, isStale, STALE_MS, USAGE_ARGS, type UsageRefreshDeps } from '../src/usageRefresh';
 
-const profile: Profile = { id: 'x1', name: 'Công ty A', color: 'charts.green', configDir: 'C:\\h\\.claude-profiles\\x1', isDefault: false };
-const def: Profile = { id: 'default', name: 'Default', color: 'charts.blue', configDir: 'C:\\h\\.claude', isDefault: true };
+const profile: Profile = { id: 'x1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir: 'C:\\h\\.claude-profiles\\x1', isDefault: false };
+const def: Profile = { id: 'default', name: 'Default', color: 'charts.blue', icon: 'account', configDir: 'C:\\h\\.claude', isDefault: true };
 const CLI = 'C:\\ext\\resources\\native-binary\\claude.exe';
 
 function fakeDeps(opts: { cli?: string; ok?: boolean; throws?: boolean } = {}) {

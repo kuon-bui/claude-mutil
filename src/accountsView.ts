@@ -1,5 +1,5 @@
 import type { AccountInfo } from './accountInfo';
-import type { Profile } from './profileStore';
+import { PROFILE_COLORS, PROFILE_ICONS, type Profile } from './profileStore';
 import { duration, quotaBar } from './statusBar';
 
 export interface AccountsState {
@@ -9,11 +9,22 @@ export interface AccountsState {
   /** Có hồ sơ đang lấy lại quota: nút Refresh quota tạm khoá. */
   refreshing: boolean;
   accounts: AccountRow[];
+  /** Các icon và màu chọn được trong khung Appearance. */
+  icons: string[];
+  colors: ColorOption[];
 }
+
+export interface ColorOption { id: string; css: string; label: string }
 
 export interface AccountRow {
   id: string;
   name: string;
+  /** Tên codicon cho avatar. */
+  icon: string;
+  /** Id `ThemeColor` của hồ sơ (để đánh dấu màu đang chọn). */
+  colorId: string;
+  /** Màu của hồ sơ dạng CSS (biến theme của VS Code), cho avatar. */
+  color: string;
   email: string;
   kind: string;
   active: boolean;
@@ -21,8 +32,20 @@ export interface AccountRow {
   missingHint?: string;
   refreshing: boolean;
   usage?: { limits: { label: string; percent: number; bar: string; resets?: string }[]; updated: string };
-  actions: { use: boolean; rename: true; login: true; delete: boolean };
+  actions: { use: boolean; rename: true; appearance: true; login: true; delete: boolean };
 }
+
+/** Id `ThemeColor` (vd. `charts.blue`) thành biến CSS mà VS Code đưa vào webview (`--vscode-charts-blue`). */
+export function themeColorCss(id: string): string {
+  return `var(--vscode-${id.replace(/\./g, '-')})`;
+}
+
+const COLOR_LABELS: Record<string, string> = {
+  'charts.blue': 'Blue', 'charts.green': 'Green', 'charts.orange': 'Orange', 'charts.purple': 'Purple',
+  'charts.red': 'Red', 'charts.yellow': 'Yellow', 'terminal.ansiCyan': 'Cyan', 'terminal.ansiBrightBlack': 'Gray',
+};
+
+const COLOR_OPTIONS: ColorOption[] = PROFILE_COLORS.map((id) => ({ id, css: themeColorCss(id), label: COLOR_LABELS[id] ?? id }));
 
 const MISSING_HINT = 'Profile folder missing: select to recreate it, then sign in again';
 
@@ -49,6 +72,8 @@ export function accountsState(input: {
     useLabel: input.hasFolder ? 'Use for This Project' : 'Use for This Window',
     refreshing: accounts.some((a) => a.refreshing),
     accounts,
+    icons: [...PROFILE_ICONS],
+    colors: COLOR_OPTIONS,
   };
 }
 
@@ -61,6 +86,9 @@ function row(
   return {
     id: profile.id,
     name: profile.name,
+    icon: profile.icon,
+    colorId: profile.color,
+    color: themeColorCss(profile.color),
     email: info?.email ?? 'Not signed in',
     kind,
     active: profile.id === activeId,
@@ -68,7 +96,7 @@ function row(
     missingHint: missing ? MISSING_HINT : undefined,
     refreshing,
     usage: usageView(info?.usage, now),
-    actions: { use: canUse, rename: true, login: true, delete: !profile.isDefault },
+    actions: { use: canUse, rename: true, appearance: true, login: true, delete: !profile.isDefault },
   };
 }
 

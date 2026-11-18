@@ -1,12 +1,12 @@
 import { expect, test } from 'vitest';
 import type { AccountInfo } from '../src/accountInfo';
 import { accountsState } from '../src/accountsView';
-import type { Profile } from '../src/profileStore';
+import { PROFILE_COLORS, PROFILE_ICONS, type Profile } from '../src/profileStore';
 import { duration, quotaBar } from '../src/statusBar';
 
-const def: Profile = { id: 'default', name: 'Default', color: 'charts.blue', configDir: '/h/.claude', isDefault: true };
-const a: Profile = { id: 'a1', name: 'Công ty A', color: 'charts.green', configDir: '/h/.claude-profiles/a1', isDefault: false };
-const b: Profile = { id: 'b2', name: 'Khách B', color: 'charts.orange', configDir: '/h/.claude-profiles/b2', isDefault: false };
+const def: Profile = { id: 'default', name: 'Default', color: 'charts.blue', icon: 'account', configDir: '/h/.claude', isDefault: true };
+const a: Profile = { id: 'a1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir: '/h/.claude-profiles/a1', isDefault: false };
+const b: Profile = { id: 'b2', name: 'Khách B', color: 'charts.orange', icon: 'account', configDir: '/h/.claude-profiles/b2', isDefault: false };
 
 const now = Date.parse('2026-11-16T04:20:00Z');
 const defInfo: AccountInfo = { email: 'me@x.com', kind: { label: 'Pro' } };
@@ -41,7 +41,8 @@ test('kind line, default no delete, missing still use, unbound prompt', () => {
 
   expect(state.accounts[0]).toMatchObject({
     id: 'default', name: 'Default', email: 'me@x.com', kind: 'Pro',
-    active: false, missing: false, actions: { use: true, rename: true, login: true, delete: false },
+    icon: 'account', colorId: 'charts.blue', color: 'var(--vscode-charts-blue)',
+    active: false, missing: false, actions: { use: true, rename: true, appearance: true, login: true, delete: false },
   });
   expect(state.accounts[0].missingHint).toBeUndefined();
   expect(state.accounts[0].usage).toBeUndefined();
@@ -53,7 +54,8 @@ test('kind line, default no delete, missing still use, unbound prompt', () => {
   expect(state.accounts[2]).toMatchObject({
     id: 'b2', missing: true, email: 'Not signed in',
     missingHint: 'Profile folder missing: select to recreate it, then sign in again',
-    actions: { use: true, rename: true, login: true, delete: true },
+    colorId: 'charts.orange', color: 'var(--vscode-charts-orange)',
+    actions: { use: true, rename: true, appearance: true, login: true, delete: true },
   });
 });
 
@@ -83,4 +85,13 @@ test('refreshing: hàng đang lấy quota và cờ chung cho nút Refresh', () =
   const state = accountsState({ ...base, refreshing: (id: string) => id === 'a1' });
   expect(state.refreshing).toBe(true);
   expect(state.accounts.map((row) => row.refreshing)).toEqual([false, true, false]);
+});
+
+test('palette: every icon and color the panel can offer, colors as theme CSS variables', () => {
+  const state = accountsState(base);
+  expect(state.icons).toEqual([...PROFILE_ICONS]);
+  expect(state.colors.map((c) => c.id)).toEqual([...PROFILE_COLORS]);
+  expect(state.colors[0]).toEqual({ id: 'charts.blue', css: 'var(--vscode-charts-blue)', label: 'Blue' });
+  expect(state.colors.find((c) => c.id === 'terminal.ansiCyan'))
+    .toEqual({ id: 'terminal.ansiCyan', css: 'var(--vscode-terminal-ansiCyan)', label: 'Cyan' });
 });

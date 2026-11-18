@@ -101,7 +101,7 @@ test('unlinkShared gỡ liên kết, giữ nguyên dữ liệu đích và các f
 });
 
 const profileAt = (configDir: string, isDefault = false): Profile =>
-  ({ id: isDefault ? 'default' : 'x1', name: 'Công ty A', color: 'charts.green', configDir, isDefault });
+  ({ id: isDefault ? 'default' : 'x1', name: 'Công ty A', color: 'charts.green', icon: 'account', configDir, isDefault });
 
 test('prepareProfileDir: hồ sơ mất junction projects (xoá dở) thì được nối lại, lịch sử không tách', async () => {
   await fs.mkdir(path.join(def, 'projects'), { recursive: true });

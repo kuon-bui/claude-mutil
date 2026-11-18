@@ -1,13 +1,53 @@
 import path from 'node:path';
 import { expect, test } from 'vitest';
 import { profileDir } from '../src/paths';
-import { DuplicateNameError, EmptyNameError, ProfileStore } from '../src/profileStore';
+import { DuplicateNameError, EmptyNameError, PROFILE_COLORS, PROFILE_ICONS, ProfileStore } from '../src/profileStore';
 import { memoryStore } from './helpers/memoryStore';
 
 test('kho rỗng vẫn có hồ sơ Mặc định trỏ vào ~/.claude', () => {
   const s = new ProfileStore(memoryStore(), '/home/a');
-  expect(s.list()).toEqual([{ id: 'default', name: 'Default', color: 'charts.blue',
+  expect(s.list()).toEqual([{ id: 'default', name: 'Default', color: 'charts.blue', icon: 'account',
     configDir: path.join('/home/a', '.claude'), isDefault: true }]);
+});
+
+test('add gán icon xoay vòng theo số hồ sơ hiện có', async () => {
+  const s = new ProfileStore(memoryStore(), '/home/a');
+  expect((await s.add('A')).icon).toBe(PROFILE_ICONS[1]);
+  expect((await s.add('B')).icon).toBe(PROFILE_ICONS[2]);
+});
+
+test('setAppearance đổi icon và màu của hồ sơ thường và hồ sơ Mặc định, giữ qua lần tạo lại kho', async () => {
+  const mem = memoryStore();
+  const s = new ProfileStore(mem, '/home/a');
+  const a = await s.add('Công ty A');
+  await s.setAppearance(a.id, { icon: 'rocket', color: 'charts.red' });
+  await s.setAppearance('default', { icon: 'home', color: 'charts.purple' });
+  const again = new ProfileStore(mem, '/home/a');
+  expect(again.get(a.id)).toMatchObject({ icon: 'rocket', color: 'charts.red', name: 'Công ty A' });
+  expect(again.get('default')).toMatchObject({ icon: 'home', color: 'charts.purple', isDefault: true });
+});
+
+test('setAppearance chỉ đổi phần được truyền', async () => {
+  const s = new ProfileStore(memoryStore(), '/home/a');
+  const a = await s.add('Công ty A');
+  await s.setAppearance(a.id, { color: 'charts.yellow' });
+  expect(s.get(a.id)).toMatchObject({ icon: a.icon, color: 'charts.yellow' });
+  await s.setAppearance('default', { icon: 'zap' });
+  expect(s.get('default')).toMatchObject({ icon: 'zap', color: PROFILE_COLORS[0] });
+});
+
+test('setAppearance từ chối icon lạ, màu lạ và hồ sơ không tồn tại', async () => {
+  const s = new ProfileStore(memoryStore(), '/home/a');
+  await expect(s.setAppearance('default', { icon: 'not-an-icon' })).rejects.toThrow();
+  await expect(s.setAppearance('default', { color: 'editor.background' })).rejects.toThrow();
+  await expect(s.setAppearance('nope', { icon: 'rocket' })).rejects.toThrow();
+  expect(s.get('default')).toMatchObject({ icon: 'account', color: PROFILE_COLORS[0] });
+});
+
+test('hồ sơ lưu từ bản cũ (chưa có icon) dùng icon account', () => {
+  const mem = memoryStore();
+  void mem.update('claudeAccounts.profiles', { profiles: [{ id: 'ab12cd34', name: 'Cũ', color: 'charts.green' }] });
+  expect(new ProfileStore(mem, '/home/a').get('ab12cd34')?.icon).toBe('account');
 });
 
 test('CLAUDE_CONFIG_DIR có sẵn ngoài VS Code: hồ sơ Mặc định dùng thư mục đó và giữ giá trị để đặt lại', () => {

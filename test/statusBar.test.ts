@@ -4,7 +4,7 @@ import type { Profile } from '../src/profileStore';
 import { refreshLine, statusView } from '../src/statusBar';
 
 const p = (name: string, color: string, isDefault = false): Profile =>
-  ({ id: isDefault ? 'default' : 'x1', name, color, configDir: '/c', isDefault });
+  ({ id: isDefault ? 'default' : 'x1', name, color, icon: 'account', configDir: '/c', isDefault });
 const def = p('Default', 'charts.blue', true);
 const res = (profile: Profile, reason: Reason) => ({ profile, reason });
 
@@ -17,6 +17,12 @@ test('chỉ có Mặc định hoặc không mở thư mục: không cảnh báo'
   expect(statusView(res(def, 'default-only'), 'me@x.com', true))
     .toEqual({ text: '$(account) Claude: Default', tooltip: 'me@x.com', color: 'charts.blue', warning: false });
   expect(statusView(res(def, 'no-folder'), 'me@x.com', true).warning).toBe(false);
+});
+
+test('dùng icon của hồ sơ', () => {
+  const work = { ...p('Công ty A', 'charts.green'), icon: 'briefcase' };
+  expect(statusView(res(work, 'bound'), 'a@x.com', true).text).toBe('$(briefcase) Claude: Công ty A');
+  expect(statusView(res(work, 'unbound'), 'a@x.com', true).text).toBe('$(briefcase) Claude: Công ty A (not chosen)');
 });
 
 test('chưa đăng nhập', () => {
