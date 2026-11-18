@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.6.0](https://github.com/kuon-bui/claude-mutil/compare/v0.5.0...v0.6.0) (2026-11-18)
+
+
+### Features
+
+* change status view desc ([7b1e692](https://github.com/kuon-bui/claude-mutil/commit/7b1e692a97341cf50c087819abc4499a6d70428e))
+* pick an icon and a color for each profile ([#16](https://github.com/kuon-bui/claude-mutil/issues/16)) ([9d13895](https://github.com/kuon-bui/claude-mutil/commit/9d138955326782acac76186bbb455151231c97e3))
+* refresh quota from the status bar tooltip and the Accounts tab ([#14](https://github.com/kuon-bui/claude-mutil/issues/14)) ([c9abd96](https://github.com/kuon-bui/claude-mutil/commit/c9abd962578bba1d6b5ed9e233fa959002938120))
+
 ## [0.5.0](https://github.com/kuon-bui/claude-mutil/compare/v0.4.1...v0.5.0) (2026-11-17)
 
 
