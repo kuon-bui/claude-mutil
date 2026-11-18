@@ -11,13 +11,24 @@ export function App({ state }: { state: AccountsState | undefined }) {
     <div className="mx-auto max-w-3xl p-4">
       <header className="mb-4 flex items-center justify-between gap-3">
         <h1 className="m-0 text-lg font-semibold">Accounts</h1>
-        <button
-          type="button"
-          className="rounded px-3 py-1 text-[var(--vscode-button-foreground)] bg-[var(--vscode-button-background)]"
-          onClick={() => send({ type: 'add' })}
-        >
-          Add account
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            className="rounded border border-[var(--vscode-panel-border)] bg-transparent px-3 py-1 disabled:opacity-60"
+            disabled={state.refreshing}
+            title="Fetch the latest quota for every signed-in account"
+            onClick={() => send({ type: 'refresh' })}
+          >
+            {state.refreshing ? 'Refreshing…' : 'Refresh quota'}
+          </button>
+          <button
+            type="button"
+            className="rounded px-3 py-1 text-[var(--vscode-button-foreground)] bg-[var(--vscode-button-background)]"
+            onClick={() => send({ type: 'add' })}
+          >
+            Add account
+          </button>
+        </div>
       </header>
       {state.prompt !== undefined && (
         <p className="mb-3 rounded border border-[var(--vscode-panel-border)] px-3 py-2">{state.prompt}</p>
@@ -65,8 +76,11 @@ function AccountCard({ row, useLabel }: { row: AccountRow; useLabel: string }) {
               <span className="text-[var(--vscode-descriptionForeground)]">{l.resets ?? ''}</span>
             </div>
           ))}
-          <p className="m-0 text-xs text-[var(--vscode-descriptionForeground)]">{row.usage.updated}</p>
+          <p className="m-0 text-xs text-[var(--vscode-descriptionForeground)]">{row.refreshing ? 'Refreshing quota…' : row.usage.updated}</p>
         </div>
+      )}
+      {row.usage === undefined && row.refreshing && (
+        <p className="mt-3 mb-0 text-xs text-[var(--vscode-descriptionForeground)]">Refreshing quota…</p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         {row.actions.use && <Action label={useLabel} onClick={() => send({ type: 'use', id: row.id })} />}

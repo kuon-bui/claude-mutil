@@ -8,6 +8,8 @@ import { configDirOverride } from './applier';
 import type { App } from './app';
 import { createLatestGate } from './latestGate';
 import { renameProfile, removeProfile } from './manageCommand';
+import type { Profile } from './profileStore';
+import type { RefreshResult } from './usageRefresh';
 
 let panel: vscode.WebviewPanel | undefined;
 const stateGate = createLatestGate();
@@ -50,6 +52,7 @@ async function pushState(app: App, target: vscode.WebviewPanel): Promise<void> {
       hasFolder: app.folders().length > 0,
       override: configDirOverride(app.config, process.platform),
       now: Date.now(),
+      refreshing: (id) => app.usage.isRefreshing(id),
     });
   }, (payload) => {
     if (panel !== target) return;
@@ -67,6 +70,10 @@ async function onMessage(app: App, msg: { type?: string; id?: string }): Promise
     await app.render();
     return;
   }
+  if (msg.type === 'refresh') {
+    reportRefresh(await app.refreshUsage(app.profiles.list()));
+    return;
+  }
   if (msg.id === undefined) return;
   const profile = app.profiles.get(msg.id);
   if (profile === undefined) return;
@@ -75,6 +82,16 @@ async function onMessage(app: App, msg: { type?: string; id?: string }): Promise
   else if (msg.type === 'login') await reportLogin(app, profile, await loginWithProgress(app, profile));
   else if (msg.type === 'delete') await removeProfile(app, profile);
   await app.render();
+}
+
+/** Báo khi lấy lại quota không được: không tìm thấy `claude`, hoặc lệnh lỗi ở hồ sơ nào. */
+export function reportRefresh(results: { profile: Profile; result: RefreshResult }[]): void {
+  if (results.some((r) => r.result === 'no-cli')) {
+    void vscode.window.showWarningMessage('Could not find the claude command, so the quota cannot be refreshed.');
+    return;
+  }
+  const failed = results.filter((r) => r.result === 'failed').map((r) => r.profile.name);
+  if (failed.length > 0) void vscode.window.showWarningMessage(`Could not refresh the quota for ${failed.join(', ')}.`);
 }
 
 function html(webview: vscode.Webview, dist: vscode.Uri): string {

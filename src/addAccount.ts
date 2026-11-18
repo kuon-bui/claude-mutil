@@ -16,7 +16,7 @@ function claudeOnPath(): Promise<boolean> {
   });
 }
 
-async function findCli(): Promise<string | undefined> {
+export async function findCli(): Promise<string | undefined> {
   const ext = vscode.extensions.getExtension('anthropic.claude-code');
   const bundled = ext && path.join(ext.extensionPath, 'resources', 'native-binary', process.platform === 'win32' ? 'claude.exe' : 'claude');
   const bundledExists = bundled !== undefined && fs.existsSync(bundled);

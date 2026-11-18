@@ -43,6 +43,11 @@
         "command": "claudeAccounts.manage",
         "category": "Claude Accounts",
         "title": "Manage Profiles"
+      },
+      {
+        "command": "claudeAccounts.refreshQuota",
+        "category": "Claude Accounts",
+        "title": "Refresh Quota"
       }
     ]
   },

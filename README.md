@@ -19,6 +19,9 @@ A VS Code extension that keeps several Claude Code accounts signed in at once. E
 | **Claude Accounts: Switch Account** (or click the status bar) | Opens the Accounts tab: pick an account, see its type and quota. The choice is remembered per folder. |
 | **Claude Accounts: Add Account** | Opens the Accounts tab, then asks for a name and signs in from the terminal (your browser opens the sign-in page). |
 | **Claude Accounts: Manage Profiles** | Opens the same Accounts tab to rename, sign in again, or delete a profile. |
+| **Claude Accounts: Refresh Quota** (or **Refresh quota** in the status bar tooltip) | Fetches the latest quota for the account this window uses. The **Refresh quota** button on the Accounts tab does this for every signed-in account. |
+
+The quota shown is the copy Claude Code saves in `.claude.json`. To refresh it, the extension runs `claude -p /usage` with that profile's `CLAUDE_CONFIG_DIR`. Claude Code then fetches the quota using its own sign-in, so the extension still never touches tokens, and no model request is made. While a window is focused, the account it uses is refreshed in the background whenever its saved quota is older than 5 minutes. VS Code has no hover event for status bar items, so the tooltip is already up to date when you hover over it instead of being fetched on hover.
 
 After you switch accounts, the extension offers to **reload the window**. Claude Code only picks up the new account when it restarts.
 

@@ -76,3 +76,11 @@ test('quota bars and reset copy match status bar', () => {
   });
   expect(duration(70 * 60_000)).toBe('1h 10m');
 });
+
+test('refreshing: hàng đang lấy quota và cờ chung cho nút Refresh', () => {
+  expect(accountsState(base).refreshing).toBe(false);
+  expect(accountsState(base).accounts.every((row) => row.refreshing === false)).toBe(true);
+  const state = accountsState({ ...base, refreshing: (id: string) => id === 'a1' });
+  expect(state.refreshing).toBe(true);
+  expect(state.accounts.map((row) => row.refreshing)).toEqual([false, true, false]);
+});
