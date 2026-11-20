@@ -1,0 +1,4 @@
+allowBuilds:
+  '@parcel/watcher': true
+  '@vscode/vsce-sign': true
+  esbuild: true

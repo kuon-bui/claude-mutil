@@ -17,7 +17,7 @@ export function statusView(
   const { profile, reason } = res;
   if (override !== undefined) {
     return {
-      text: '$(warning) Claude: a setting is forcing the config folder',
+      text: '$(warning) a setting is forcing the config folder',
       tooltip: `\`claudeCode.environmentVariables\` sets \`CLAUDE_CONFIG_DIR\` = ${escapeMarkdown(override)}; Claude Accounts cannot switch accounts.`,
       color: profile.color,
       warning: true,
@@ -25,7 +25,7 @@ export function statusView(
   }
   let text = `$(${profile.icon}) ${profile.name}`;
   if (reason === 'unbound') text += ' (not chosen)';
-  if (reason === 'missing-profile') text = `$(warning) Claude: profile missing, using ${profile.name}`;
+  if (reason === 'missing-profile') text = `$(warning) profile missing, using ${profile.name}`;
 
   let tooltip = escapeMarkdown(email ?? 'Not signed in');
   if (!perWindow) tooltip += ' · applies to all windows';
