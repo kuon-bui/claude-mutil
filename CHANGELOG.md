@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.1](https://github.com/kuon-bui/claude-mutil/compare/v0.6.0...v0.6.1) (2026-11-20)
+
+
+### Bug Fixes
+
+* update information show in status bar ([cc080cb](https://github.com/kuon-bui/claude-mutil/commit/cc080cbf0e87b02f5b3497423efde9850e3757c9))
+
 ## [0.6.0](https://github.com/kuon-bui/claude-mutil/compare/v0.5.0...v0.6.0) (2026-11-18)
 
 
