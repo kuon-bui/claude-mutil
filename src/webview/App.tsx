@@ -1,20 +1,31 @@
 import { useState } from 'react';
-import type { AccountRow, AccountsState, ColorOption, PanelMessage } from './types';
+import type { AccountRow, AccountsLocation, AccountsState, ColorOption, PanelMessage } from './types';
 import { vscode } from './vscode';
 
 function send(msg: PanelMessage): void {
   vscode.postMessage(msg);
 }
 
-export function App({ state }: { state: AccountsState | undefined }) {
+export function App({ state, location }: { state: AccountsState | undefined; location: AccountsLocation }) {
   /** Hồ sơ đang mở khung Appearance (mỗi lần một hồ sơ). */
   const [editing, setEditing] = useState<string | undefined>(undefined);
   if (state === undefined) return <p className="p-4 text-[var(--vscode-descriptionForeground)]">Loading…</p>;
+  const sidebar = location === 'sidebar';
   return (
-    <div className="mx-auto max-w-3xl p-4">
-      <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="m-0 text-lg font-semibold">Accounts</h1>
-        <div className="flex gap-2">
+    <div className={`@container mx-auto max-w-3xl ${sidebar ? 'px-2 py-3' : 'p-4'}`}>
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        {/* Ở sidebar, tiêu đề view đã ghi "Accounts". */}
+        {!sidebar && <h1 className="m-0 text-lg font-semibold">Accounts</h1>}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="flex items-center rounded border border-[var(--vscode-panel-border)] bg-transparent px-2 py-1"
+            title={sidebar ? 'Open Accounts in an editor tab' : 'Move Accounts to the sidebar'}
+            aria-label={sidebar ? 'Open Accounts in an editor tab' : 'Move Accounts to the sidebar'}
+            onClick={() => send({ type: 'move' })}
+          >
+            <i className={`codicon codicon-${sidebar ? 'link-external' : 'layout-sidebar-left'}`} aria-hidden="true" />
+          </button>
           <button
             type="button"
             className="rounded border border-[var(--vscode-panel-border)] bg-transparent px-3 py-1 disabled:opacity-60"
@@ -81,13 +92,14 @@ function AccountCard({ row, useLabel, palette, editing, onToggleEditing }: {
       {row.usage !== undefined && (
         <div className="mt-3">
           {row.usage.limits.map((l) => (
-            <div key={l.label} className="mb-2 grid grid-cols-[8rem_1fr_3rem_auto] items-center gap-2 text-sm">
+            <div key={l.label} className="mb-2 grid grid-cols-[6rem_1fr_2.5rem] items-center gap-x-2 text-sm @md:grid-cols-[8rem_1fr_3rem_auto]">
               <span>{l.label}</span>
               <div className="h-1.5 overflow-hidden rounded bg-[var(--vscode-panel-border)]">
                 <div className="h-full bg-[var(--vscode-button-background)]" style={{ width: `${Math.min(100, Math.max(0, l.percent))}%` }} />
               </div>
               <span className="text-right">{Math.round(l.percent)}%</span>
-              <span className="text-[var(--vscode-descriptionForeground)]">{l.resets ?? ''}</span>
+              {/* Chỗ hẹp (sidebar): giờ reset xuống dòng riêng dưới thanh. */}
+              <span className="col-span-3 text-xs text-[var(--vscode-descriptionForeground)] @md:col-span-1 @md:text-sm">{l.resets ?? ''}</span>
             </div>
           ))}
           <p className="m-0 text-xs text-[var(--vscode-descriptionForeground)]">{row.refreshing ? 'Refreshing quota…' : row.usage.updated}</p>

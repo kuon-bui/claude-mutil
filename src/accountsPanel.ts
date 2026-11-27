@@ -11,36 +11,98 @@ import { changeAppearance, renameProfile, removeProfile } from './manageCommand'
 import type { Profile } from './profileStore';
 import type { RefreshResult } from './usageRefresh';
 
-let panel: vscode.WebviewPanel | undefined;
-const stateGate = createLatestGate();
+/** Nơi đặt trang Accounts: tab trong editor hoặc view ở sidebar (activity bar). Nhớ chung cho mọi cửa sổ. */
+export type AccountsLocation = 'editor' | 'sidebar';
 
+const PANEL_TYPE = 'claudeAccounts.accounts';
+export const VIEW_ID = 'claudeAccounts.accountsView';
+const LOCATION_KEY = 'claudeAccounts.location';
+/** Context key bật view ở sidebar (`when` trong package.json): view chỉ hiện khi trang đã được đưa về sidebar. */
+const SIDEBAR_CONTEXT = 'claudeAccounts.inSidebar';
+
+interface Host { webview: vscode.Webview; location: AccountsLocation; gate: ReturnType<typeof createLatestGate> }
+
+let panel: (Host & { panel: vscode.WebviewPanel }) | undefined;
+let view: (Host & { view: vscode.WebviewView }) | undefined;
+
+function location(ctx: vscode.ExtensionContext): AccountsLocation {
+  return ctx.globalState.get<AccountsLocation>(LOCATION_KEY) === 'sidebar' ? 'sidebar' : 'editor';
+}
+
+/** Đăng ký view ở sidebar và bật context key theo vị trí đã nhớ. Gọi một lần lúc activate. */
+export function registerAccountsView(app: App, ctx: vscode.ExtensionContext): void {
+  void vscode.commands.executeCommand('setContext', SIDEBAR_CONTEXT, location(ctx) === 'sidebar');
+  const dist = vscode.Uri.joinPath(ctx.extensionUri, 'dist');
+  ctx.subscriptions.push(vscode.window.registerWebviewViewProvider(VIEW_ID, {
+    resolveWebviewView(webviewView) {
+      webviewView.webview.options = { enableScripts: true, localResourceRoots: [dist] };
+      const host = { view: webviewView, webview: webviewView.webview, location: 'sidebar' as const, gate: createLatestGate() };
+      view = host;
+      setup(app, ctx, host, dist);
+      webviewView.onDidDispose(() => { if (view === host) view = undefined; });
+      webviewView.onDidChangeVisibility(() => { if (webviewView.visible) void pushState(app, host); });
+    },
+  }, { webviewOptions: { retainContextWhenHidden: true } }));
+}
+
+/** Mở trang Accounts ở vị trí đã chọn (tab editor hoặc sidebar). */
 export function showAccounts(app: App, ctx: vscode.ExtensionContext): void {
+  if (location(ctx) === 'sidebar') {
+    void vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+    refreshAccounts(app);
+    return;
+  }
+  showPanel(app, ctx);
+}
+
+/** Chuyển trang Accounts giữa tab editor và sidebar (đóng chỗ cũ, mở chỗ mới) và nhớ lựa chọn. */
+export async function moveAccounts(app: App, ctx: vscode.ExtensionContext, to: AccountsLocation): Promise<void> {
+  await ctx.globalState.update(LOCATION_KEY, to);
+  await vscode.commands.executeCommand('setContext', SIDEBAR_CONTEXT, to === 'sidebar');
+  if (to === 'sidebar') {
+    panel?.panel.dispose();
+    await vscode.commands.executeCommand(`${VIEW_ID}.focus`);
+  } else {
+    showPanel(app, ctx);
+  }
+  refreshAccounts(app);
+}
+
+function showPanel(app: App, ctx: vscode.ExtensionContext): void {
   if (panel) {
-    panel.reveal(vscode.ViewColumn.One);
-    void refreshAccounts(app);
+    panel.panel.reveal(vscode.ViewColumn.One);
+    refreshAccounts(app);
     return;
   }
   const dist = vscode.Uri.joinPath(ctx.extensionUri, 'dist');
-  panel = vscode.window.createWebviewPanel(
-    'claudeAccounts.accounts',
+  const webviewPanel = vscode.window.createWebviewPanel(
+    PANEL_TYPE,
     'Accounts',
     vscode.ViewColumn.One,
     { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [dist] },
   );
-  panel.webview.html = html(panel.webview, dist);
-  panel.webview.onDidReceiveMessage((msg: Parameters<typeof onMessage>[1]) => { void onMessage(app, msg); });
-  panel.onDidDispose(() => { panel = undefined; });
-  ctx.subscriptions.push(panel);
-  void refreshAccounts(app);
+  const host = { panel: webviewPanel, webview: webviewPanel.webview, location: 'editor' as const, gate: createLatestGate() };
+  panel = host;
+  setup(app, ctx, host, dist);
+  webviewPanel.onDidDispose(() => { if (panel === host) panel = undefined; });
+  ctx.subscriptions.push(webviewPanel);
+}
+
+function setup(app: App, ctx: vscode.ExtensionContext, host: Host, dist: vscode.Uri): void {
+  host.webview.html = html(host.webview, dist);
+  host.webview.onDidReceiveMessage((msg: Parameters<typeof onMessage>[1]) => {
+    if (msg.type === 'ready') void pushState(app, host);
+    else if (msg.type === 'move') void moveAccounts(app, ctx, host.location === 'sidebar' ? 'editor' : 'sidebar');
+    else void onMessage(app, msg);
+  });
 }
 
 export function refreshAccounts(app: App): void {
-  if (panel === undefined) return;
-  void pushState(app, panel);
+  for (const host of [panel, view]) if (host !== undefined) void pushState(app, host);
 }
 
-async function pushState(app: App, target: vscode.WebviewPanel): Promise<void> {
-  await stateGate.run(async () => {
+async function pushState(app: App, target: Host): Promise<void> {
+  await target.gate.run(async () => {
     const profiles = app.profiles.list();
     const infos = await Promise.all(profiles.map((p) => readAccountInfo(p, app.home)));
     return accountsState({
@@ -55,16 +117,12 @@ async function pushState(app: App, target: vscode.WebviewPanel): Promise<void> {
       refreshing: (id) => app.usage.isRefreshing(id),
     });
   }, (payload) => {
-    if (panel !== target) return;
-    void target.webview.postMessage({ type: 'state', payload });
+    if (panel !== target && view !== target) return;
+    void target.webview.postMessage({ type: 'state', payload, location: target.location });
   });
 }
 
 async function onMessage(app: App, msg: { type?: string; id?: string; icon?: unknown; color?: unknown }): Promise<void> {
-  if (msg.type === 'ready') {
-    refreshAccounts(app);
-    return;
-  }
   if (msg.type === 'add') {
     await runAddAccount(app);
     await app.render();

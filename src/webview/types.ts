@@ -26,7 +26,10 @@ export interface AccountRow {
   actions: { use: boolean; rename: true; appearance: true; login: true; delete: boolean };
 }
 
+/** Trang đang nằm ở đâu: tab editor hay view ở sidebar. */
+export type AccountsLocation = 'editor' | 'sidebar';
+
 export type PanelMessage =
-  | { type: 'add' | 'ready' | 'refresh' }
+  | { type: 'add' | 'ready' | 'refresh' | 'move' }
   | { type: 'use' | 'rename' | 'login' | 'delete'; id: string }
   | { type: 'appearance'; id: string; icon?: string; color?: string };

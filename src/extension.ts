@@ -1,7 +1,7 @@
 import os from 'node:os';
 import * as vscode from 'vscode';
 import { findCli, runAddAccount } from './addAccount';
-import { refreshAccounts, reportRefresh, showAccounts } from './accountsPanel';
+import { moveAccounts, refreshAccounts, registerAccountsView, reportRefresh, showAccounts } from './accountsPanel';
 import { App } from './app';
 import { configDirOverride, createApplier, type ConfigAccess } from './applier';
 import { BindingStore } from './bindingStore';
@@ -54,6 +54,7 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
   // 4. Thanh trạng thái.
   item.command = 'claudeAccounts.switch';
   item.name = 'Claude Accounts';
+  registerAccountsView(app, ctx);
   ctx.subscriptions.push(
     item,
     vscode.commands.registerCommand('claudeAccounts.switch', () => runSwitch(app, ctx)),
@@ -63,6 +64,8 @@ export async function activate(ctx: vscode.ExtensionContext): Promise<void> {
       await app.render();
     }),
     vscode.commands.registerCommand('claudeAccounts.manage', () => runManage(app, ctx)),
+    vscode.commands.registerCommand('claudeAccounts.moveToSidebar', () => moveAccounts(app, ctx, 'sidebar')),
+    vscode.commands.registerCommand('claudeAccounts.moveToEditor', () => moveAccounts(app, ctx, 'editor')),
     vscode.commands.registerCommand(REFRESH_QUOTA_COMMAND, async () => {
       reportRefresh(await app.refreshUsage([app.resolution.profile]));
     }),
