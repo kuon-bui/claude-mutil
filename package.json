@@ -48,8 +48,65 @@
         "command": "claudeAccounts.refreshQuota",
         "category": "Claude Accounts",
         "title": "Refresh Quota"
+      },
+      {
+        "command": "claudeAccounts.moveToSidebar",
+        "category": "Claude Accounts",
+        "title": "Move Accounts to Sidebar",
+        "icon": "$(layout-sidebar-left)"
+      },
+      {
+        "command": "claudeAccounts.moveToEditor",
+        "category": "Claude Accounts",
+        "title": "Open Accounts in Editor",
+        "icon": "$(link-external)"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "claudeAccounts",
+          "title": "Claude Accounts",
+          "icon": "images/sidebar.svg"
+        }
+      ]
+    },
+    "views": {
+      "claudeAccounts": [
+        {
+          "type": "webview",
+          "id": "claudeAccounts.accountsView",
+          "name": "Accounts",
+          "when": "claudeAccounts.inSidebar"
+        }
+      ]
+    },
+    "menus": {
+      "editor/title": [
+        {
+          "command": "claudeAccounts.moveToSidebar",
+          "when": "activeWebviewPanelId == 'claudeAccounts.accounts'",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "claudeAccounts.moveToEditor",
+          "when": "view == claudeAccounts.accountsView",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "claudeAccounts.moveToSidebar",
+          "when": "!claudeAccounts.inSidebar"
+        },
+        {
+          "command": "claudeAccounts.moveToEditor",
+          "when": "claudeAccounts.inSidebar"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run build",
