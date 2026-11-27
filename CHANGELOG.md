@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.0](https://github.com/kuon-bui/claude-mutil/compare/v0.6.1...v0.7.0) (2026-11-27)
+
+
+### Features
+
+* mark the account in use and shorten the Use button ([2cb02bc](https://github.com/kuon-bui/claude-mutil/commit/2cb02bc26a35801569cc95fde68fa28d8a4a3256))
+* move the Accounts page to the sidebar and back ([cc0aa1c](https://github.com/kuon-bui/claude-mutil/commit/cc0aa1c0a4a4d80626e0248b3c2a5d25e919e683))
+
 ## [0.6.1](https://github.com/kuon-bui/claude-mutil/compare/v0.6.0...v0.6.1) (2026-11-20)
 
 
