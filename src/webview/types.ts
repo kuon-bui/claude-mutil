@@ -1,7 +1,7 @@
 export interface AccountsState {
   prompt?: string;
   override?: string;
-  useLabel: string;
+  useTitle: string;
   refreshing: boolean;
   accounts: AccountRow[];
   icons: string[];

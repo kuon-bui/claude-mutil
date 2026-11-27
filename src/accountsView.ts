@@ -5,7 +5,8 @@ import { duration, quotaBar } from './statusBar';
 export interface AccountsState {
   prompt?: string;
   override?: string;
-  useLabel: string;
+  /** Tooltip của nút Use: dùng cho project hay cho cửa sổ. */
+  useTitle: string;
   /** Có hồ sơ đang lấy lại quota: nút Refresh quota tạm khoá. */
   refreshing: boolean;
   accounts: AccountRow[];
@@ -65,11 +66,11 @@ export function accountsState(input: {
   const canUse = input.override === undefined;
   const refreshing = input.refreshing ?? (() => false);
   const accounts = input.profiles.map((profile, i) =>
-    row(profile, input.infos[i], input.activeId, input.dirExists, canUse, refreshing(profile.id), now));
+    row(profile, input.infos[i], input.activeId, input.dirExists, canUse, input.unbound, refreshing(profile.id), now));
   return {
     prompt: input.override === undefined && input.unbound ? 'Which Claude account should this project use?' : undefined,
     override: input.override,
-    useLabel: input.hasFolder ? 'Use for This Project' : 'Use for This Window',
+    useTitle: input.hasFolder ? 'Use this account for this project' : 'Use this account for this window',
     refreshing: accounts.some((a) => a.refreshing),
     accounts,
     icons: [...PROFILE_ICONS],
@@ -79,8 +80,9 @@ export function accountsState(input: {
 
 function row(
   profile: Profile, info: AccountInfo | undefined, activeId: string,
-  dirExists: (dir: string) => boolean, canUse: boolean, refreshing: boolean, now: number,
+  dirExists: (dir: string) => boolean, canUse: boolean, unbound: boolean, refreshing: boolean, now: number,
 ): AccountRow {
+  const active = profile.id === activeId;
   const missing = !profile.isDefault && !dirExists(profile.configDir);
   const kind = info?.kind.organization ? `${info.kind.label} · ${info.kind.organization}` : (info?.kind.label ?? 'Unknown');
   return {
@@ -91,12 +93,13 @@ function row(
     color: themeColorCss(profile.color),
     email: info?.email ?? 'Not signed in',
     kind,
-    active: profile.id === activeId,
+    active,
     missing,
     missingHint: missing ? MISSING_HINT : undefined,
     refreshing,
     usage: usageView(info?.usage, now),
-    actions: { use: canUse, rename: true, appearance: true, login: true, delete: !profile.isDefault },
+    // Hồ sơ đang dùng không cần nút Use, trừ khi project chưa chọn hồ sơ (bấm để ghi lựa chọn).
+    actions: { use: canUse && (!active || unbound), rename: true, appearance: true, login: true, delete: !profile.isDefault },
   };
 }
 

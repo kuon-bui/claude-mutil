@@ -35,7 +35,7 @@ const base = {
 
 test('kind line, default no delete, missing still use, unbound prompt', () => {
   const state = accountsState(base);
-  expect(state.useLabel).toBe('Use for This Window');
+  expect(state.useTitle).toBe('Use this account for this window');
   expect(state.prompt).toBe('Which Claude account should this project use?');
   expect(state.override).toBeUndefined();
 
@@ -50,6 +50,8 @@ test('kind line, default no delete, missing still use, unbound prompt', () => {
   expect(state.accounts[1].kind).toBe('Team · Godgroup');
   expect(state.accounts[1].active).toBe(true);
   expect(state.accounts[1].actions.delete).toBe(true);
+  // Chưa chọn hồ sơ cho project: hồ sơ đang dùng vẫn có nút Use để ghi lựa chọn.
+  expect(state.accounts[1].actions.use).toBe(true);
 
   expect(state.accounts[2]).toMatchObject({
     id: 'b2', missing: true, email: 'Not signed in',
@@ -59,11 +61,17 @@ test('kind line, default no delete, missing still use, unbound prompt', () => {
   });
 });
 
+test('active account hides Use once the project has chosen it', () => {
+  const state = accountsState({ ...base, unbound: false, hasFolder: true });
+  expect(state.accounts[1]).toMatchObject({ active: true, actions: { use: false } });
+  expect(state.accounts[0].actions.use).toBe(true);
+});
+
 test('override disables use and sets banner', () => {
   const state = accountsState({ ...base, unbound: false, hasFolder: true, override: '/tmp/x' });
   expect(state.override).toBe('/tmp/x');
   expect(state.prompt).toBeUndefined();
-  expect(state.useLabel).toBe('Use for This Project');
+  expect(state.useTitle).toBe('Use this account for this project');
   expect(state.accounts.every((row) => row.actions.use === false)).toBe(true);
 });
 

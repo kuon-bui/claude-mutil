@@ -54,10 +54,16 @@ export function App({ state, location }: { state: AccountsState | undefined; loc
       )}
       <ul className="m-0 list-none p-0">
         {state.accounts.map((row) => (
-          <li key={row.id} className="mb-3 rounded border border-[var(--vscode-panel-border)] p-3">
+          <li
+            key={row.id}
+            className="mb-3 rounded border border-[var(--vscode-panel-border)] p-3"
+            // Hồ sơ đang dùng: viền và nền nhạt theo màu hồ sơ.
+            style={row.active ? { borderColor: row.color, background: tint(row.color, 6) } : undefined}
+            aria-current={row.active ? 'true' : undefined}
+          >
             <AccountCard
               row={row}
-              useLabel={state.useLabel}
+              useTitle={state.useTitle}
               palette={{ icons: state.icons, colors: state.colors }}
               editing={editing === row.id}
               onToggleEditing={() => setEditing((cur) => (cur === row.id ? undefined : row.id))}
@@ -71,8 +77,8 @@ export function App({ state, location }: { state: AccountsState | undefined; loc
 
 interface Palette { icons: string[]; colors: ColorOption[] }
 
-function AccountCard({ row, useLabel, palette, editing, onToggleEditing }: {
-  row: AccountRow; useLabel: string; palette: Palette; editing: boolean; onToggleEditing: () => void;
+function AccountCard({ row, useTitle, palette, editing, onToggleEditing }: {
+  row: AccountRow; useTitle: string; palette: Palette; editing: boolean; onToggleEditing: () => void;
 }) {
   return (
     <>
@@ -80,12 +86,21 @@ function AccountCard({ row, useLabel, palette, editing, onToggleEditing }: {
         <div className="flex items-center gap-3">
           <Avatar row={row} expanded={editing} onClick={onToggleEditing} />
           <strong>{row.name}</strong>
+          {row.active && (
+            <span
+              className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+              style={{ color: row.color, background: tint(row.color, 18) }}
+              title="This account is in use in this window"
+            >
+              <i className="codicon codicon-check" style={{ fontSize: 12 }} aria-hidden="true" />
+              In use
+            </span>
+          )}
         </div>
         <span className="text-[var(--vscode-descriptionForeground)]">{row.kind}</span>
       </div>
       <div className="mt-1 flex flex-wrap justify-between gap-2 text-[var(--vscode-descriptionForeground)]">
         <span>{row.email}</span>
-        {row.active && <span>Using in this window</span>}
       </div>
       {editing && <AppearanceEditor row={row} palette={palette} onDone={onToggleEditing} />}
       {row.missingHint !== undefined && <p className="mt-2 mb-0">{row.missingHint}</p>}
@@ -109,7 +124,7 @@ function AccountCard({ row, useLabel, palette, editing, onToggleEditing }: {
         <p className="mt-3 mb-0 text-xs text-[var(--vscode-descriptionForeground)]">Refreshing quota…</p>
       )}
       <div className="mt-3 flex flex-wrap gap-2">
-        {row.actions.use && <Action label={useLabel} onClick={() => send({ type: 'use', id: row.id })} />}
+        {row.actions.use && <Action label="Use" title={useTitle} onClick={() => send({ type: 'use', id: row.id })} />}
         {row.actions.rename && <Action label="Rename" onClick={() => send({ type: 'rename', id: row.id })} />}
         {row.actions.appearance && (
           <Action label={editing ? 'Done' : 'Appearance'} expanded={editing} onClick={onToggleEditing} />
@@ -203,10 +218,13 @@ function AppearanceEditor({ row, palette, onDone }: { row: AccountRow; palette: 
   );
 }
 
-function Action({ label, onClick, expanded }: { label: string; onClick: () => void; expanded?: boolean }) {
+function Action({ label, title, onClick, expanded }: {
+  label: string; title?: string; onClick: () => void; expanded?: boolean;
+}) {
   return (
     <button
       type="button"
+      title={title}
       className="rounded border border-[var(--vscode-panel-border)] bg-transparent px-2 py-1"
       aria-expanded={expanded}
       onClick={onClick}
